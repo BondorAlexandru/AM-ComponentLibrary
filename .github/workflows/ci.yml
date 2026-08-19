@@ -6,22 +6,20 @@ on:
   pull_request:
 
 jobs:
-  check:
+  library:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-
       - run: npm ci
 
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Test (frozen class strings + behaviour)
+      - name: Test (frozen class strings + behaviour + token contract)
         run: npm test
 
       # dist/ is committed and both consumers run it with no install-time build,
@@ -34,3 +32,25 @@ jobs:
             git diff --stat -- dist
             exit 1
           fi
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: npm ci --prefix site
+
+      - name: Typecheck the docs site
+        run: npm run typecheck --prefix site
+
+      # CLAUDE.md §C.12 — every runtime export must be documented with visible
+      # states. This is what makes that rule enforceable.
+      - name: Docs cover every export
+        run: npm run test --prefix site
+
+      - name: Build the docs site
+        run: npm run build --prefix site

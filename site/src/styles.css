@@ -1,0 +1,106 @@
+@import 'tailwindcss';
+
+/* The library's class strings live outside this Vite root, so Tailwind has to be
+   told to scan them — same requirement the two consuming apps have. */
+@source "../../src";
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   The token contract, mapped through one indirection layer.
+
+   `@theme inline` substitutes these values into every utility, so a themeable
+   role has to resolve through a variable the theme switcher can redefine. That
+   is exactly what both apps do (`--sb-*` in the CMS, `--*` in Campaigns); here
+   the layer is `--am-*`, written onto <html> by `applyTheme()`.
+   ──────────────────────────────────────────────────────────────────────────── */
+@theme inline {
+  --color-canvas: var(--am-canvas);
+  --color-surface: var(--am-surface);
+  --color-surface-2: var(--am-surface-2);
+  --color-ink: var(--am-ink);
+  --color-ink-2: var(--am-ink-2);
+  --color-ink-3: var(--am-ink-3);
+  --color-accent: var(--am-accent);
+  --color-accent-text: var(--am-accent-text);
+  --color-accent-soft: var(--am-accent-soft);
+  --color-on-accent: var(--am-on-accent);
+  --color-ok: var(--am-ok);
+  --color-on-ok: var(--am-on-ok);
+  --color-warn: var(--am-warn);
+  --color-danger-accent: var(--am-danger-accent);
+  --color-on-danger: var(--am-on-danger);
+  --color-line: var(--am-line);
+  --color-hairline: var(--am-hairline);
+  --color-input: var(--am-input);
+}
+
+/* Tier-2 keyframes the Campaigns-origin overlays animate with. Mirrors
+   ../Influencer/src/index.css. */
+@keyframes am-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes am-slide-in-right {
+  from { transform: translateX(16px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes am-pop-in {
+  from { transform: scale(0.97) translateY(6px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+.animate-fade-in { animation: am-fade-in 0.18s ease-out both; }
+.animate-slide-in { animation: am-slide-in-right 0.24s cubic-bezier(0.32, 0.72, 0, 1) both; }
+.animate-pop-in { animation: am-pop-in 0.2s cubic-bezier(0.32, 0.72, 0, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Docs chrome.
+
+   Deliberately built from Tailwind's *built-in* palette (zinc/…) and never from
+   the token roles above. If the chrome used the tokens it would restyle itself
+   every time you switched preview theme — and a broken token would take the
+   navigation down with it, which is precisely when you need the nav to work.
+   ──────────────────────────────────────────────────────────────────────────── */
+body {
+  margin: 0;
+  background: #09090b;
+  color: #e4e4e7;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tailwind v4 preflight leaves buttons at cursor:default. */
+button:not(:disabled),
+[role='button']:not([aria-disabled='true']),
+summary,
+select:not(:disabled),
+input[type='checkbox']:not(:disabled),
+input[type='radio']:not(:disabled) {
+  cursor: pointer;
+}
+
+/* A preview surface paints the theme's canvas so specimens sit on the same
+   background they will in the app. */
+.am-canvas {
+  background: var(--am-canvas);
+  color: var(--am-ink);
+}
+
+/* Checkerboard behind transparent specimens (ghost buttons, quiet variants), so
+   "no background" is visibly different from "background matching the canvas". */
+.am-checker {
+  background-image:
+    linear-gradient(45deg, color-mix(in srgb, var(--am-ink) 6%, transparent) 25%, transparent 25%),
+    linear-gradient(-45deg, color-mix(in srgb, var(--am-ink) 6%, transparent) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, color-mix(in srgb, var(--am-ink) 6%, transparent) 75%),
+    linear-gradient(-45deg, transparent 75%, color-mix(in srgb, var(--am-ink) 6%, transparent) 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+}
+
+html { scroll-behavior: smooth; scroll-padding-top: 5rem; }

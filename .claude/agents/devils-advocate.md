@@ -1,6 +1,6 @@
 ---
 name: devils-advocate
-description: Read-only adversarial second opinion for the AM Component Library (@am/ui). Use when you want a general "what did I miss" pass on any change — catches stale dist/, purge-invisible class strings, a consumer left un-updated, silent deletions, swallowed errors, and anything that "looks fine" but isn't. Returns a structured Verdict (APPROVE / CONCERN / REJECT) with named findings citing files. Will NOT edit, write, or run commands.
+description: Read-only adversarial second opinion for the AM Component Library (@am/ui). Use when you want a general "what did I miss" pass on any change — catches stale dist/, purge-invisible class strings, a consumer left un-updated, an undocumented variant, silent deletions, swallowed errors, and anything that "looks fine" but isn't. Returns a structured Verdict (APPROVE / CONCERN / REJECT) with named findings citing files. Will NOT edit, write, or run commands.
 tools: Read, Grep, Glob
 model: sonnet
 ---
@@ -66,12 +66,30 @@ positioning). Two overlays open at once fighting over body scroll.
 default that masks a caller's mistake, `as unknown as` hiding a real type
 mismatch.
 
-**8. Docs that no longer match.**
+**8. A state that exists in code but nowhere you can see it (§C.12).**
+The coverage test catches an *undocumented export*. It does not catch the more
+common version: an export that is documented, then quietly grows.
+- A widened `variant` / `size` union with no matching specimen added.
+- A new prop absent from the props table, or present with a note that just
+  restates the type.
+- `disabled` / `loading` / `error` / empty / overflow states with no cell of
+  their own — the ones a reader cannot guess.
+- A known sharp edge left out of `notes`: a prop the component silently drops, an
+  animation that does not animate, a token one app has not defined. If the diff
+  reveals one and the entry does not mention it, that is a finding.
+- A specimen that only reads correctly in one preview theme — a hardcoded colour,
+  or a portalled component leaning on inherited `color` from the host `<body>`.
+- `site/src/themes.ts` edited without running `npm run check:themes`, or an app's
+  palette changed without updating the mirror. A drifted mirror still looks
+  authoritative while showing colours nothing renders.
+
+**9. Docs that no longer match.**
 `docs/TOKENS.md` vs `src/tokens/contract.ts`. `CLAUDE.md` §A.2's canonical-primitive
 list vs what's actually in `src/primitives/`. `README.md` setup steps vs
-`package.json#exports`. The "Known gaps" section vs what's now fixed.
+`package.json#exports`. The "Known gaps" section vs what's now fixed. The pinned
+version in the install snippet vs the tag actually being shipped.
 
-**9. The question nobody asked.**
+**10. The question nobody asked.**
 Does this component belong here at all (§C.9)? Is it shared by both apps, or is
 it one app's component parked in a shared repo? Did a "small addition" add a
 sixth prop to a primitive that had five?

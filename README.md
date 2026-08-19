@@ -3,6 +3,9 @@
 The shared design system behind **SpaceBlock CMS** and **AM Campaigns**.
 Token-driven React 19 primitives, zero runtime dependencies, one look.
 
+**→ [Browse the components](https://bondoralexandru.github.io/AM-ComponentLibrary/)** — every
+component, every state, in all three app themes.
+
 - **[CLAUDE.md](./CLAUDE.md)** — the working rules for this repo. Read first.
 - **[docs/TOKENS.md](./docs/TOKENS.md)** — the token contract.
 
@@ -11,7 +14,7 @@ Token-driven React 19 primitives, zero runtime dependencies, one look.
 ## Install
 
 ```bash
-npm i "github:BondorAlexandru/AM-ComponentLibrary#v0.1.3"
+npm i "github:BondorAlexandru/AM-ComponentLibrary#v0.1.4"
 ```
 
 `dist/` is committed, so there is **no install-time build** — nothing to fail on
@@ -70,16 +73,46 @@ Two menu primitives exist on purpose: `Menu` is an items-array kebab menu that
 portals itself and flips above the trigger; `Popover` is render-prop driven and
 sits in flow. See the header of `src/primitives/Popover.tsx`.
 
+## The docs site
+
+```bash
+npm --prefix site install   # once
+npm run site:dev            # http://localhost:5173
+```
+
+It imports the library from `src/`, not `dist/`, so what you see is what you are
+editing. Three things it is for beyond listing components:
+
+- **A theme switcher** — CMS dark, CMS light, AM Campaigns, mirrored from the real
+  stylesheets. A component only works if it works in all three; the CMS is
+  dark-first and Campaigns is light-only, and a fill tuned for one can be
+  unreadable in the other.
+- **Every state side by side** — every variant and size, plus `disabled`,
+  `loading`, `error`, empty and overflowing. Overlays are live triggers, so you
+  can check that Escape closes and body scroll locks.
+- **Which tier-2 tokens each app actually declares** — the Tokens page flags the
+  four the CMS has not defined, so adopting `Modal` there has a visible
+  prerequisite rather than a surprise.
+
+Published to GitHub Pages from `main`. Adding anything to the public surface
+means adding its docs in the same commit — see `CLAUDE.md` §C.12.
+
 ## Develop
 
 ```bash
 npm install
-npm run check     # typecheck + test + build
+npm run check           # typecheck + test + build + site typecheck + docs coverage
+npm run check:themes    # site palettes still match both apps (needs the sibling repos)
 ```
 
 `dist/` is committed — **run `npm run build` and commit it with every `src/`
 change** (`CLAUDE.md` §C.7). `npm run verify:dist` and CI enforce it.
 
-`src/__tests__/frozen-classes.test.tsx` pins the exact class strings the CMS
-renders. If it fails, you changed the CMS's design. That needs a decision, not a
-fix to the test.
+Two tests will stop you, on purpose:
+
+- `src/__tests__/frozen-classes.test.tsx` pins the exact class strings the CMS
+  renders. If it fails, you changed the CMS's design. That needs a decision, not
+  a fix to the test.
+- `site/src/registry.test.ts` fails if a runtime export has no docs entry, is
+  documented twice, or is documented but no longer exported. §C.12 is a rule
+  because of this test, not in spite of it.

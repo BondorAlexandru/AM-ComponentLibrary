@@ -6,6 +6,13 @@
  * Requires tier-2 tokens: `--radius-card`, `--shadow-overlay`, and the
  * `animate-fade-in` / `animate-slide-in` / `animate-pop-in` keyframes.
  * See docs/TOKENS.md.
+ *
+ * Both panels set `text-ink` explicitly rather than inheriting. They portal into
+ * `document.body`, so without it the text colour comes from whatever the host
+ * put on <body> — which is `ink` in both apps today, but is ambient state a
+ * self-contained overlay should not depend on. The docs site caught this: its
+ * chrome sets a light body colour, and the modal title rendered near-invisible
+ * on the white surface.
  */
 
 'use client'
@@ -64,7 +71,7 @@ export function Drawer({
         ref={ref}
         tabIndex={-1}
         className={cn(
-          'animate-slide-in bg-canvas relative flex h-full w-full flex-col shadow-overlay outline-none',
+          'animate-slide-in bg-canvas text-ink relative flex h-full w-full flex-col shadow-overlay outline-none',
           width,
         )}
       >
@@ -102,7 +109,7 @@ export function Modal({
         ref={ref}
         tabIndex={-1}
         className={cn(
-          'animate-pop-in bg-surface rounded-card relative flex max-h-[88vh] w-full flex-col shadow-overlay outline-none',
+          'animate-pop-in bg-surface text-ink rounded-card relative flex max-h-[88vh] w-full flex-col shadow-overlay outline-none',
           width,
         )}
       >

@@ -49,7 +49,10 @@ This file, plus this one-paragraph **architecture at a glance**:
 | `package.json` (`exports`, `peerDependencies`, `files`) | §C.6, §C.7 — packaging is load-bearing for two deploy targets |
 | `tsconfig.build.json`, `dist/**` | §C.7 — `dist/` is committed and must never be stale |
 | `src/icons/index.tsx` | §C.8 — generated from `@material-symbols/svg-300`; regenerate, don't hand-edit |
-| adding a component | §C.9 — earn its place in both apps first |
+| adding a component | §C.9 — earn its place in both apps first, then §C.12 — document it |
+| `site/**` | §C.12 — the docs site; every export needs an entry with visible states |
+| `site/src/registry.ts`, `site/src/entries/**` | §C.12 — the catalogue. `registry.test.ts` fails if an export is undocumented |
+| `site/src/themes.ts` | §C.12 — a mirror of both apps' palettes. Run `npm run check:themes` |
 
 ### A.3 When unsure what to load
 
@@ -71,6 +74,9 @@ read the CMS — `../CMS/components/ui/**` — rather than guessing.
 - State the success criteria before non-trivial work and verify against them:
   `npm run check`, and — for anything touching a CMS-canonical primitive or the
   token contract — **build both consumer apps** and invoke the reviewer agents.
+- **Look at it.** `npm run site:dev` and open the component you changed, in all
+  three themes. A green test run proves the class strings; only the site proves
+  the thing looks right. Every bug found in this repo so far was found that way.
 - When a change would look better but differ from the CMS, say so and **stop**.
   That is a product decision, not a refactor.
 
@@ -163,9 +169,45 @@ shared library costs both apps a version bump and gives neither a benefit._
 _Backed by: devils-advocate._ _Why: silent removals are how guards and history
 disappear._
 
-**C.11 — To break a rule, stop and ask.**
+**C.12 — Nothing ships undocumented. Document it *and* show its states.**
+A component nobody can look at is a component nobody trusts, and prose is not a
+substitute for seeing it. Every addition to the public surface — a component, a
+variant, a prop, a utility, a token — lands with its docs in the **same commit**:
+
+1. **An entry in `site/src/entries/**`**, listed in `site/src/registry.ts`, with
+   the new export named in its `covers` array. `site/src/registry.test.ts` fails
+   the build if a runtime export is undocumented, documented twice, or documented
+   but no longer exported — so this is checked, not trusted.
+2. **Every state visible, not described.** One specimen per state, each with a
+   label saying which state it is: every variant, every size, and the states a
+   reader cannot infer — `disabled`, `loading`, `error`, empty, overflowing,
+   focused. If a state only exists when something is open, the specimen is a real
+   trigger you can click, not a screenshot. Use `checker: true` where a fill is
+   transparent, and `raw: true` for a docs data table that must not sit on the
+   themed canvas.
+3. **A props table** — `name`, `type`, `default`, and a note saying what the prop
+   is *for*. Restating the type is not a note.
+4. **The `summary` says what it is and when to reach for it**, and where two
+   primitives look similar (`Badge` vs `Pill`, `Menu` vs `Popover`) it says which
+   one to pick. That ambiguity is the most expensive thing a design system ships.
+5. **A `notes` entry for anything a reader would otherwise find out the hard
+   way** — a dropped prop, an inert animation, a naming inconsistency, a token an
+   app has not defined yet. Write the sharp edge down; do not smooth it over.
+6. **Check it in all three themes.** A component only works if it works in CMS
+   dark, CMS light and Campaigns. The theme switcher exists because "looks fine"
+   in one of them means nothing.
+
+Adding a variant to an existing component means adding its specimen too — a
+variant with no specimen is invisible to the next person and will be
+reinvented. _Backed by: am-ui-reviewer (states + themes) + am-ui-architect
+(coverage + registry)._ _Why: the two apps are the only consumers, and their
+authors cannot read this source while they work. If the site does not show a
+state, that state effectively does not exist — someone will rebuild it locally,
+and the duplication this library exists to remove comes straight back._
+
+**C.13 — To break a rule, stop and ask.**
 No silent `// eslint-disable`, no `--no-verify`, no `.skip` on a frozen-class
-test, no "temporarily" hardcoding a colour.
+test, no `covers: []` to dodge §C.12, no "temporarily" hardcoding a colour.
 _Backed by: all three._
 
 ---
@@ -186,12 +228,32 @@ Both are required. Neither fails loudly.
 
 ---
 
+## The docs site
+
+`site/` is a Vite app that imports the library from `src/` (not `dist/`), so
+`npm run site:dev` reflects what you are editing with no rebuild. It is published
+to GitHub Pages from `main`:
+**https://bondoralexandru.github.io/AM-ComponentLibrary/**
+
+What it is for, beyond a component list:
+
+- **Three themes, one switcher.** CMS dark, CMS light, Campaigns — mirrored from
+  the real stylesheets in `site/src/themes.ts`. `npm run check:themes` diffs them
+  against the sibling repos so the docs cannot quietly start lying.
+- **Every state, side by side.** The point of §C.12. A grid of labelled specimens
+  beats a page of prose about what `disabled` looks like.
+- **Which tier-2 tokens each app actually declares.** The Tokens page marks the
+  four the CMS has not defined yet, so "adopting Modal in the CMS" has a visible
+  prerequisite instead of a surprise.
+- Chrome is built from Tailwind's built-in palette, never the token roles, so a
+  broken token cannot take the navigation down with it.
+
 ## Known gaps (review-time awareness, not yet rules)
 
-- **No visual regression testing.** `frozen-classes.test.tsx` pins class strings,
-  which catches an edited utility but not a changed DOM structure or a token an
-  app maps to the wrong value. A screenshot diff against both apps is the
-  natural next layer.
+- **No automated visual regression testing.** `frozen-classes.test.tsx` pins
+  class strings and `registry.test.ts` pins docs coverage, but neither catches a
+  changed DOM structure or a token an app maps to the wrong value. The site makes
+  that reviewable by eye; a screenshot diff over it is the natural next layer.
 - **`Skeleton`'s `wave` animation is dead.** It needs an `--animate-shimmer`
   entry that neither app defines, so `wave` renders as a static bar. Preserved
   as-is rather than "fixed", because fixing it would change the CMS (§C.1).
@@ -214,6 +276,6 @@ Invoke via the Task tool. Each returns a structured `Verdict: APPROVE | CONCERN 
 
 | Agent | Use for |
 |---|---|
-| **am-ui-reviewer** | any change to a component's markup or class strings, new variants/props, token usage, accessibility, anything near a CMS-canonical primitive |
-| **am-ui-architect** | the token contract, `src/index.ts`, `package.json` exports/peers, the build & committed `dist/`, whether a component belongs here at all |
-| **devils-advocate** | a general "what did I miss" pass — silent deletions, stale `dist/`, purge-invisible classes, a consumer left un-updated |
+| **am-ui-reviewer** | any change to a component's markup or class strings, new variants/props, token usage, accessibility, whether the new states are actually shown on the site, anything near a CMS-canonical primitive |
+| **am-ui-architect** | the token contract, `src/index.ts`, `package.json` exports/peers, the build & committed `dist/`, docs coverage in `site/src/registry.ts`, whether a component belongs here at all |
+| **devils-advocate** | a general "what did I miss" pass — silent deletions, stale `dist/`, purge-invisible classes, an undocumented variant, a consumer left un-updated |

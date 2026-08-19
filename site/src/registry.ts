@@ -5,6 +5,8 @@ import { cardEntry, emptyStateEntry, mediaThumbEntry, skeletonEntry } from './en
 import { dropdownEntry, formEntry } from './entries/forms.tsx'
 import { confirmDialogEntry, menuEntry, modalEntry, popoverEntry } from './entries/overlays.tsx'
 import { iconsEntry, spinnerEntry, tokensEntry, utilsEntry } from './entries/foundations.tsx'
+import { barListEntry, barsEntry, formattersEntry, gaugeEntry, layoutEntry, statEntry } from './entries/data.tsx'
+import { stepperEntry, tabsEntry } from './entries/navigation.tsx'
 
 /**
  * The catalogue. Order inside a group is the order in the sidebar.
@@ -28,13 +30,30 @@ export const ENTRIES: DocEntry[] = [
   mediaThumbEntry,
   formEntry,
   dropdownEntry,
+  tabsEntry,
+  stepperEntry,
+  statEntry,
+  barsEntry,
+  barListEntry,
+  gaugeEntry,
+  layoutEntry,
+  formattersEntry,
   modalEntry,
   confirmDialogEntry,
   menuEntry,
   popoverEntry,
 ]
 
-export const GROUP_ORDER = ['Foundations', 'Actions', 'Status', 'Containers', 'Forms', 'Overlays'] as const
+export const GROUP_ORDER = [
+  'Foundations',
+  'Actions',
+  'Status',
+  'Containers',
+  'Forms',
+  'Navigation',
+  'Overlays',
+  'Data',
+] as const
 
 export function groupedEntries(): { group: string; entries: DocEntry[] }[] {
   return GROUP_ORDER.map((group) => ({

@@ -14,6 +14,7 @@ import { Button, IconButton } from '../primitives/Button.js'
 import { Badge, Status } from '../primitives/Badge.js'
 import { Card } from '../primitives/Card.js'
 import { EmptyState } from '../primitives/EmptyState.js'
+import { BarList, Delta, EmptyHint, KpiCard, SectionCard } from '../primitives/Metrics.js'
 
 /** Class attributes are multi-line template literals; compare as a set. */
 function classesOf(el: Element): Set<string> {
@@ -130,5 +131,58 @@ describe('EmptyState — chrome is additive', () => {
     // Layout is untouched.
     expect(classes).toContain('flex')
     expect(classes).toContain('py-12')
+  })
+})
+
+describe('Metrics — frozen CMS classes', () => {
+  it('Delta is ok when up, danger when down, ink-3 when flat', () => {
+    const { container: up } = render(<Delta value={12} />)
+    expectClasses(up.firstElementChild as Element, 'text-ok')
+    const { container: down } = render(<Delta value={-4} />)
+    expectClasses(down.firstElementChild as Element, 'text-danger-accent')
+    const { container: flat } = render(<Delta value={0} />)
+    expectClasses(flat.firstElementChild as Element, 'text-ink-3')
+  })
+
+  it('Delta shows the absolute value — the arrow carries the sign', () => {
+    render(<Delta value={-17} />)
+    expect(screen.getByText(/17%/)).toBeInTheDocument()
+  })
+
+  it('KpiCard keeps the display eyebrow and the 27px figure', () => {
+    render(<KpiCard label="Sessions" value="12.4k" />)
+    expectClasses(screen.getByText('Sessions'), 'font-display text-[12px] tracking-[1.4px] uppercase text-ink-3')
+    expectClasses(screen.getByText('12.4k'), 'font-display text-[27px] leading-none text-ink')
+  })
+
+  it('BarList fills proportionally to the largest row, not to a total', () => {
+    const { container } = render(
+      <BarList title="Top pages" rows={[{ label: '/home', count: 50 }, { label: '/about', count: 25 }]} />,
+    )
+    const fills = container.querySelectorAll('.bg-accent-soft')
+    expect((fills[0] as HTMLElement).style.width).toBe('100%')
+    expect((fills[1] as HTMLElement).style.width).toBe('50%')
+  })
+
+  it('BarList formats counts and shows the empty text', () => {
+    // 12_400 crosses the 10k threshold, where formatNumber drops the decimal.
+    render(<BarList title="Top pages" rows={[{ label: '/home', count: 12400 }]} />)
+    expect(screen.getByText('12k')).toBeInTheDocument()
+    render(<BarList title="Under 10k" rows={[{ label: '/about', count: 9400 }]} />)
+    expect(screen.getByText('9.4k')).toBeInTheDocument()
+    render(<BarList title="Empty" rows={[]} emptyText="Nothing tracked yet" />)
+    expect(screen.getByText('Nothing tracked yet')).toBeInTheDocument()
+  })
+
+  it('SectionCard switches between the eyebrow and heading treatments', () => {
+    render(<SectionCard title="Eyebrow">x</SectionCard>)
+    expectClasses(screen.getByText('Eyebrow'), 'font-display text-[12px] tracking-[1.4px] uppercase text-ink-3')
+    render(<SectionCard title="Heading" variant="heading">x</SectionCard>)
+    expectClasses(screen.getByText('Heading'), 'font-display text-sm font-semibold tracking-tight text-ink')
+  })
+
+  it('EmptyHint keeps its dashed inset panel', () => {
+    const { container } = render(<EmptyHint>Nothing here</EmptyHint>)
+    expectClasses(container.firstElementChild as Element, 'border-dashed border-hairline rounded-2xl bg-input')
   })
 })

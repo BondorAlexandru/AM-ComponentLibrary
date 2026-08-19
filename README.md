@@ -14,7 +14,7 @@ component, every state, in all three app themes.
 ## Install
 
 ```bash
-npm i "github:BondorAlexandru/AM-ComponentLibrary#v0.1.4"
+npm i "github:BondorAlexandru/AM-ComponentLibrary#v0.2.0"
 ```
 
 `dist/` is committed, so there is **no install-time build** — nothing to fail on
@@ -61,17 +61,23 @@ import { Plus, Trash2 } from '@am/ui/icons'
 **Canonical primitives** — extracted from the CMS, class strings frozen
 (`CLAUDE.md` §C.1):
 `Button` · `IconButton` · `Badge` · `Tag` · `Status` · `Card` · `EmptyState` ·
-`Menu` · `Dropdown` · `Form` · `ConfirmDialog` · `MediaThumb` · `Skeleton`
+`Menu` · `Dropdown` · `Form` · `ConfirmDialog` · `MediaThumb` · `Skeleton` ·
+`Delta` · `KpiCard` · `BarList` · `ScoreGauge` · `SectionCard` · `EmptyHint`
 
 **Contributed from AM Campaigns** — new to the CMS, which is unaffected:
-`Pill` · `Modal` · `Drawer` · `Popover` · `MenuItem` · `MenuLabel` · `MenuSeparator`
+`Pill` · `Modal` · `Drawer` · `Popover` · `MenuItem` · `MenuLabel` ·
+`MenuSeparator` · `Stat` · `Stepper` · `SegmentedControl` · `ProgressBar` ·
+`SegmentedBar`
 
-**Also** — `cn`, `AmUiProvider`, `Spinner`, `findMissingTokens`, and 146
-Material Symbols icons under `@am/ui/icons` (lucide-compatible names).
+**Also** — `Tabs`, `cn`, `formatNumber`, `formatBytes`, `AmUiProvider`,
+`Spinner`, `findMissingTokens`, and 146 Material Symbols icons under
+`@am/ui/icons` (lucide-compatible names).
 
-Two menu primitives exist on purpose: `Menu` is an items-array kebab menu that
+Several pairs look similar and are not. `Menu` is an items-array kebab menu that
 portals itself and flips above the trigger; `Popover` is render-prop driven and
-sits in flow. See the header of `src/primitives/Popover.tsx`.
+sits in flow. `Badge` owns its colours via a variant; `Pill` takes them from the
+caller. `Tabs` underlines for page-level sections; `SegmentedControl` uses pills
+inside a panel. Each component's page on the site says which to pick.
 
 ## The docs site
 

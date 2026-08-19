@@ -10,6 +10,7 @@
  */
 
 export { cn, type ClassValue } from './lib/cn.js'
+export { formatNumber, formatBytes } from './lib/format.js'
 
 export {
   AmUiProvider,
@@ -31,11 +32,23 @@ export { Form } from './primitives/Form.js'
 export { Menu, type MenuItem as MenuItemDescriptor } from './primitives/Menu.js'
 export { MediaThumb, isVideoUrl, type MediaThumbProps } from './primitives/MediaThumb.js'
 export { Skeleton } from './primitives/Skeleton.js'
+export {
+  Delta,
+  KpiCard,
+  BarList,
+  ScoreGauge,
+  SectionCard,
+  EmptyHint,
+  type CountRow,
+} from './primitives/Metrics.js'
 
 // Primitives contributed from AM Campaigns — new to the CMS, which is unaffected.
 export { Pill } from './primitives/Pill.js'
 export { Modal, Drawer } from './primitives/Overlay.js'
 export { Popover, MenuItem, MenuLabel, MenuSeparator } from './primitives/Popover.js'
+export { Stat, ProgressBar, SegmentedBar, type BarSegment } from './primitives/Metrics.js'
+export { Tabs, SegmentedControl, type TabItem } from './primitives/Tabs.js'
+export { Stepper, type Step } from './primitives/Stepper.js'
 
 export {
   TIER1_COLOR_TOKENS,

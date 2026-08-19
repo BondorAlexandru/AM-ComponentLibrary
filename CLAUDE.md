@@ -216,7 +216,7 @@ _Backed by: all three._
 
 Both are required. Neither fails loudly.
 
-1. **Install** — `"@am/ui": "github:BondorAlexandru/AM-ComponentLibrary#v0.1.3"`.
+1. **Install** — `"@am/ui": "github:BondorAlexandru/AM-ComponentLibrary#v0.2.0"`.
 2. **Point Tailwind at the package**, or every class string is purged and the
    components render unstyled:
    ```css

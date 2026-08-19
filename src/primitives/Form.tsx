@@ -12,6 +12,7 @@
 
 import React, { ReactNode, forwardRef, useId } from 'react'
 import { Dropdown } from './Dropdown.js'
+import { cn } from '../lib/cn.js'
 
 // ==========================================
 // Field Root (Container)
@@ -27,7 +28,7 @@ interface FieldProps {
 
 function Field({ children, error, className = '' }: FieldProps) {
   return (
-    <div className={`space-y-1 ${className}`} data-field-error={error ? 'true' : undefined}>
+    <div className={cn(`space-y-1`, className)} data-field-error={error ? 'true' : undefined}>
       {children}
     </div>
   )
@@ -50,7 +51,7 @@ function Label({ children, htmlFor, required, action, className = '' }: LabelPro
     <div className="flex items-center justify-between">
       <label
         htmlFor={htmlFor}
-        className={`font-display uppercase text-[12px] font-normal tracking-[1.2px] text-ink-3 ${className}`}
+        className={cn(`font-display uppercase text-[12px] font-normal tracking-[1.2px] text-ink-3`, className)}
       >
         {children}
         {required && <span className="text-danger-accent ml-1">*</span>}
@@ -72,9 +73,9 @@ interface TextInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement
 const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
   ({ error, size = 'md', className = '', ...props }, ref) => {
     const sizeClasses = {
-      sm: 'h-[32px] px-2 text-sm',
-      md: 'h-[40px] px-[13px] text-[13.5px]',
-      lg: 'h-[48px] px-4 text-lg',
+      sm: 'h-[var(--am-h-field-sm,32px)] px-2 text-sm',
+      md: 'h-[var(--am-h-field-md,40px)] px-[13px] text-[var(--am-text-field-md,13.5px)]',
+      lg: 'h-[var(--am-h-field-lg,48px)] px-4 text-lg',
     }
 
     const errorClasses = error
@@ -84,17 +85,15 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
     return (
       <input
         ref={ref}
-        className={`
-          w-full rounded-[8px]
+        className={cn(`
+          w-full rounded-[var(--am-radius-control,8px)]
           ${sizeClasses[size]}
           ${errorClasses}
           border bg-input text-ink
           transition-colors
           focus:outline-none focus:ring-2 focus:ring-offset-0
           disabled:opacity-60 disabled:cursor-not-allowed
-          placeholder:text-ink-3
-          ${className}
-        `}
+          placeholder:text-ink-3`, className)}
         {...props}
       />
     )
@@ -122,17 +121,15 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <textarea
         ref={ref}
-        className={`
-          w-full rounded-[8px] px-[13px] py-[10px] text-[13.5px]
+        className={cn(`
+          w-full rounded-[var(--am-radius-control,8px)] px-[13px] py-[10px] text-[var(--am-text-field-md,13.5px)]
           ${errorClasses}
           ${resizeClass}
           border bg-input text-ink
           transition-colors
           focus:outline-none focus:ring-2 focus:ring-offset-0
           disabled:opacity-60 disabled:cursor-not-allowed
-          placeholder:text-ink-3
-          ${className}
-        `}
+          placeholder:text-ink-3`, className)}
         {...props}
       />
     )
@@ -153,9 +150,9 @@ interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>
 // while keeping the old Form.Select API: <option> children + e.target.value.
 const Select = ({ error, size = 'md', children, className = '', value, onChange, disabled, ...props }: SelectProps) => {
   const sizeClasses = {
-    sm: 'h-[32px] pl-2 pr-[8px] text-sm',
-    md: 'h-[40px] pl-[13px] pr-[10px] text-[13.5px]',
-    lg: 'h-[48px] pl-4 pr-[12px] text-lg',
+    sm: 'h-[var(--am-h-field-sm,32px)] pl-2 pr-[8px] text-sm',
+    md: 'h-[var(--am-h-field-md,40px)] pl-[13px] pr-[10px] text-[var(--am-text-field-md,13.5px)]',
+    lg: 'h-[var(--am-h-field-lg,48px)] pl-4 pr-[12px] text-lg',
   }
 
   const errorClasses = error ? 'border-danger-accent' : 'border-line hover:border-accent/60 focus-visible:border-accent'
@@ -169,15 +166,13 @@ const Select = ({ error, size = 'md', children, className = '', value, onChange,
       disabled={disabled}
       aria-label={props['aria-label']}
       title={props.title}
-      className={`
-        w-full rounded-[8px]
+      className={cn(`
+        w-full rounded-[var(--am-radius-control,8px)]
         ${sizeClasses[size]}
         ${errorClasses}
         border bg-input text-ink
         transition-colors
-        focus-visible:outline-none
-        ${className}
-      `}
+        focus-visible:outline-none`, className)}
     >
       {children}
     </Dropdown>
@@ -208,15 +203,13 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           ref={ref}
           type="checkbox"
           id={id}
-          className={`
+          className={cn(`
             h-4 w-4 rounded
             ${errorClasses}
             border-2
             transition-colors
             focus:outline-none focus:ring-2 focus:ring-offset-0
-            disabled:cursor-not-allowed disabled:opacity-50
-            ${className}
-          `}
+            disabled:cursor-not-allowed disabled:opacity-50`, className)}
           {...props}
         />
         {label && (
@@ -253,15 +246,13 @@ const Radio = forwardRef<HTMLInputElement, RadioProps>(
           ref={ref}
           type="radio"
           id={id}
-          className={`
+          className={cn(`
             h-4 w-4
             ${errorClasses}
             border-2
             transition-colors
             focus:outline-none focus:ring-2 focus:ring-offset-0
-            disabled:cursor-not-allowed disabled:opacity-50
-            ${className}
-          `}
+            disabled:cursor-not-allowed disabled:opacity-50`, className)}
           {...props}
         />
         {label && (
@@ -286,7 +277,7 @@ interface HintProps {
 
 function Hint({ children, className = '' }: HintProps) {
   return (
-    <p className={`text-xs text-ink-2 ${className}`}>
+    <p className={cn(`text-xs text-ink-2`, className)}>
       {children}
     </p>
   )
@@ -303,7 +294,7 @@ interface ErrorProps {
 
 function FieldError({ children, className = '' }: ErrorProps) {
   return (
-    <p className={`text-xs text-danger-accent ${className}`} role="alert">
+    <p className={cn(`text-xs text-danger-accent`, className)} role="alert">
       {children}
     </p>
   )
@@ -322,7 +313,7 @@ interface InputGroupProps {
 
 function InputGroup({ children, startAddon, endAddon, className = '' }: InputGroupProps) {
   return (
-    <div className={`flex items-stretch ${className}`}>
+    <div className={cn(`flex items-stretch`, className)}>
       {startAddon && (
         <div className="flex items-center px-3 bg-input border border-r-0 border-line rounded-l-[8px] text-sm text-ink-2">
           {startAddon}

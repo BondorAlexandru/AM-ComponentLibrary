@@ -25,7 +25,7 @@ export function ConfirmDialog({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-surface rounded-[12px] shadow-[0_24px_60px_-15px_rgba(0,0,0,0.5)] border border-hairline w-full max-w-md p-6">
+      <div className="bg-surface rounded-[var(--am-radius-card,var(--radius-card,12px))] shadow-[0_24px_60px_-15px_rgba(0,0,0,0.5)] border border-hairline w-full max-w-md p-6">
         <h2 className="text-lg font-semibold tracking-tight text-ink mb-2">{title}</h2>
         <p className="text-sm text-ink-2 mb-6 leading-relaxed">{message}</p>
         <div className="flex justify-end gap-2">

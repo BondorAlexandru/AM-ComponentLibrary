@@ -23,7 +23,9 @@ each rule names the one that backs it.
 
 This file, plus this one-paragraph **architecture at a glance**:
 
-> `@am/ui` is a **zero-runtime-dependency** React 19 component library. It is
+> `@am/ui` is a React 19 component library with three small runtime deps —
+> `clsx`, `tailwind-merge` and `class-variance-authority`, the same set shadcn/ui
+> uses, and each one load-bearing (see §C.14). It is
 > built by **plain `tsc`** (`tsconfig.build.json`) to per-file ESM in `dist/`,
 > which is **committed to the repo** — both consumers install it as a git
 > dependency, so there is no install-time build step to fail on Vercel or
@@ -50,6 +52,8 @@ This file, plus this one-paragraph **architecture at a glance**:
 | `tsconfig.build.json`, `dist/**` | §C.7 — `dist/` is committed and must never be stale |
 | `src/icons/index.tsx` | §C.8 — generated from `@material-symbols/svg-300`; regenerate, don't hand-edit |
 | adding a component | §C.9 — earn its place in both apps first, then §C.12 — document it |
+| `src/tokens/geometry.ts` | §C.14 — every entry is a literal class string whose fallback is the historical value |
+| `src/theme.tsx`, `src/lib/cn.ts`, `src/lib/Slot.tsx` | §C.14 — the customisation contract and its layer order |
 | `site/**` | §C.12 — the docs site; every export needs an entry with visible states |
 | `site/src/registry.ts`, `site/src/entries/**` | §C.12 — the catalogue. `registry.test.ts` fails if an export is undocumented |
 | `site/src/themes.ts` | §C.12 — a mirror of both apps' palettes. Run `npm run check:themes` |
@@ -205,6 +209,34 @@ authors cannot read this source while they work. If the site does not show a
 state, that state effectively does not exist — someone will rebuild it locally,
 and the duplication this library exists to remove comes straight back._
 
+**C.14 — Keep all four customisation layers working, in that order.**
+An app must be able to restyle this library without forking a component. Four
+mechanisms, and each has a failure mode worth naming:
+
+- **Tokens.** Geometry lives in `src/tokens/geometry.ts` as *literal* class
+  strings of the form `h-[var(--am-h-control-md,34px)]`. The fallback is the
+  value the component rendered before the token existed — that is what lets a
+  shipped app adopt this and change nothing. **Never change a fallback**; that
+  silently moves every app that has not defined the token. Never assemble one at
+  runtime (§C.3): Tailwind scans source text and emits nothing for
+  `` `h-[${x}]` ``.
+- **Theme.** `AmUiProvider`'s `theme.components.<Name>` supplies `defaultProps`
+  and a `className`. A new component with variants should read
+  `useComponentTheme` so it is configurable like the rest; one that doesn't is
+  an inconsistency an app will trip over.
+- **`className`.** `cn` is `twMerge(clsx(...))`. Every component must pass the
+  caller's `className` **last**, or the override silently loses. Two utilities of
+  the same kind have identical specificity — without `tailwind-merge`, the
+  winner is whichever Tailwind happened to emit later, not the one you wrote.
+- **Variants.** Export the `cva` function (`buttonVariants`, …) and its
+  `VariantProps` type from `src/index.ts`, so an app can build its own component
+  on the same classes rather than copying them.
+
+Order is fixed and must stay fixed: variant classes → theme `className` → call
+site `className`. _Backed by: am-ui-reviewer + am-ui-architect._ _Why: the
+alternative to configuration is a fork, and a forked primitive is the exact
+duplication this repo exists to delete._
+
 **C.13 — To break a rule, stop and ask.**
 No silent `// eslint-disable`, no `--no-verify`, no `.skip` on a frozen-class
 test, no `covers: []` to dodge §C.12, no "temporarily" hardcoding a colour.
@@ -216,7 +248,7 @@ _Backed by: all three._
 
 Both are required. Neither fails loudly.
 
-1. **Install** — `"@am/ui": "github:BondorAlexandru/AM-ComponentLibrary#v0.2.0"`.
+1. **Install** — `"@am/ui": "github:BondorAlexandru/AM-ComponentLibrary#v0.3.0"`.
 2. **Point Tailwind at the package**, or every class string is purged and the
    components render unstyled:
    ```css
@@ -250,6 +282,12 @@ What it is for, beyond a component list:
 
 ## Known gaps (review-time awareness, not yet rules)
 
+- **Only Button and IconButton read `useComponentTheme` so far.** The other
+  primitives honour tokens and `className` but ignore `theme.components`. Wiring
+  the rest is mechanical; until then the theme layer is partial.
+- **Not every literal is a token.** One-off type sizes (a chip label, the KPI
+  figure, the gauge number) and the shadow/scrim colours are still hardcoded.
+  The theme `className` covers them; tokens would be cleaner.
 - **No automated visual regression testing.** `frozen-classes.test.tsx` pins
   class strings and `registry.test.ts` pins docs coverage, but neither catches a
   changed DOM structure or a token an app maps to the wrong value. The site makes

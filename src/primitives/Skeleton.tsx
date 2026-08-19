@@ -11,6 +11,8 @@
 
 'use client'
 
+import { cn } from '../lib/cn.js'
+
 
 interface SkeletonProps {
   width?: string | number
@@ -44,12 +46,10 @@ export function Skeleton({
 
   return (
     <div
-      className={`
+      className={cn(`
         bg-input
         ${variantClasses[variant]}
-        ${animationClasses[animation]}
-        ${className}
-      `}
+        ${animationClasses[animation]}`, className)}
       style={{ width: widthStyle, height: heightStyle }}
     />
   )

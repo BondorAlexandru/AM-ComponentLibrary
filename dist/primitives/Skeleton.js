@@ -10,6 +10,7 @@
  */
 'use client';
 import { jsx as _jsx } from "react/jsx-runtime";
+import { cn } from '../lib/cn.js';
 export function Skeleton({ width = '100%', height = '1rem', variant = 'rectangular', animation = 'pulse', className = '', }) {
     const widthStyle = typeof width === 'number' ? `${width}px` : width;
     const heightStyle = typeof height === 'number' ? `${height}px` : height;
@@ -23,11 +24,9 @@ export function Skeleton({ width = '100%', height = '1rem', variant = 'rectangul
         wave: 'animate-shimmer bg-gradient-to-r from-input via-hairline to-input bg-[length:200%_100%]',
         none: '',
     };
-    return (_jsx("div", { className: `
+    return (_jsx("div", { className: cn(`
         bg-input
         ${variantClasses[variant]}
-        ${animationClasses[animation]}
-        ${className}
-      `, style: { width: widthStyle, height: heightStyle } }));
+        ${animationClasses[animation]}`, className), style: { width: widthStyle, height: heightStyle } }));
 }
 //# sourceMappingURL=Skeleton.js.map

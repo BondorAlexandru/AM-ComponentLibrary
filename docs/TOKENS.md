@@ -95,6 +95,37 @@ Campaigns' `src/index.css` is the reference implementation.
 
 ---
 
+---
+
+## Geometry — the `--am-*` scale
+
+Colour roles are a contract the app must satisfy. Geometry is the opposite: the
+library ships a working default and the app overrides what it wants. Every entry
+is `var(--am-<name>, <the value the component always rendered>)`, so an app that
+defines nothing looks exactly as it did.
+
+```css
+:root {
+  --am-radius-control: 999px;
+  --am-h-control-md: 38px;
+}
+```
+
+| Group | Tokens |
+|---|---|
+| Control heights | `--am-h-control-sm` 28px · `-md` 34px · `-lg` 40px |
+| Icon buttons | `--am-h-icon-sm` 32px · `-md` 40px · `-lg` 44px |
+| Form controls | `--am-h-field-sm` 32px · `-md` 40px · `-lg` 48px |
+| Radii | `--am-radius-chip` 6px · `-control` 8px · `-panel` 10px · `-card` → `--radius-card` · `-pill` → `--radius-pill` |
+| Control text | `--am-text-control-sm` 12.5px · `-md` 13px · `-lg` 14px |
+| Field text | `--am-text-field-sm` 14px · `-md` 13.5px · `-lg` 18px |
+
+`--am-radius-card` and `--am-radius-pill` chain to the tier-2 app tokens before
+their literal fallback, so an app that already defines `--radius-card` keeps
+working without touching anything.
+
+`GEOMETRY_TOKENS` exports the same table as data, and the docs site renders it.
+
 ## Adding a token
 
 A new **tier 1** token is a breaking change for both apps (§C.4):

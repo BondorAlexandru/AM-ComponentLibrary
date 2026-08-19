@@ -115,7 +115,7 @@ export function Menu({
               right: coords?.right,
               visibility: coords ? 'visible' : 'hidden',
             }}
-            className="z-[100] w-[196px] rounded-[10px] border border-hairline bg-surface shadow-[0_8px_12px_rgba(0,0,0,0.25)] p-[6px] flex flex-col gap-[2px]"
+            className="z-[100] w-[196px] rounded-[var(--am-radius-panel,10px)] border border-hairline bg-surface shadow-[0_8px_12px_rgba(0,0,0,0.25)] p-[6px] flex flex-col gap-[2px]"
           >
             {items.map((item, i) => (
               <button
@@ -127,7 +127,7 @@ export function Menu({
                   setOpen(false)
                   item.onClick()
                 }}
-                className={`flex w-full items-center gap-[10px] px-[10px] py-[8px] text-[13px] font-medium rounded-[8px] text-left transition-colors disabled:opacity-40 ${
+                className={`flex w-full items-center gap-[10px] px-[10px] py-[8px] text-[13px] font-medium rounded-[var(--am-radius-control,8px)] text-left transition-colors disabled:opacity-40 ${
                   item.variant === 'danger'
                     ? 'text-danger-accent hover:bg-danger-accent/10'
                     : 'text-ink hover:bg-input'
@@ -161,7 +161,7 @@ export function Menu({
         }}
         className={
           buttonClassName ||
-          'inline-flex items-center justify-center h-9 w-9 rounded-[8px] text-ink-3 hover:bg-input hover:text-ink transition-colors'
+          'inline-flex items-center justify-center h-9 w-9 rounded-[var(--am-radius-control,8px)] text-ink-3 hover:bg-input hover:text-ink transition-colors'
         }
       >
         {trigger ?? <MoreHorizontal className="w-4 h-4" />}

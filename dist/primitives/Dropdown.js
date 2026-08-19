@@ -31,7 +31,7 @@ function optionsFromChildren(children) {
     });
     return out;
 }
-const DEFAULT_TRIGGER = 'h-[34px] w-full rounded-[8px] border border-line bg-input pl-[10px] pr-[8px] text-[12.5px] text-ink hover:border-accent/60 focus-visible:outline-none focus-visible:border-accent transition-colors';
+const DEFAULT_TRIGGER = 'h-[var(--am-h-control-md,34px)] w-full rounded-[var(--am-radius-control,8px)] border border-line bg-input pl-[10px] pr-[8px] text-[12.5px] text-ink hover:border-accent/60 focus-visible:outline-none focus-visible:border-accent transition-colors';
 export function Dropdown({ value, onChange, options, children, placeholder = 'Select…', disabled, className = '', 'aria-label': ariaLabel, title, }) {
     const opts = options ?? optionsFromChildren(children);
     const selected = opts.find((o) => o.value === value);
@@ -116,9 +116,9 @@ export function Dropdown({ value, onChange, options, children, placeholder = 'Se
                 left: coords?.left,
                 width: coords?.width,
                 visibility: coords ? 'visible' : 'hidden',
-            }, className: "z-[110] max-h-[280px] overflow-y-auto rounded-[10px] border border-hairline bg-surface p-[6px] shadow-[0_8px_12px_rgba(0,0,0,0.25)] flex flex-col gap-[2px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", children: opts.map((o, i) => {
+            }, className: "z-[110] max-h-[280px] overflow-y-auto rounded-[var(--am-radius-panel,10px)] border border-hairline bg-surface p-[6px] shadow-[0_8px_12px_rgba(0,0,0,0.25)] flex flex-col gap-[2px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", children: opts.map((o, i) => {
                 const isSelected = o.value === value;
-                return (_jsxs("button", { type: "button", role: "option", "aria-selected": isSelected, disabled: o.disabled, onClick: () => commit(o.value), onMouseEnter: () => setActiveIdx(i), className: `flex w-full items-center gap-2 rounded-[8px] px-[10px] py-[7px] text-left text-[13px] transition-colors disabled:opacity-40 ${isSelected
+                return (_jsxs("button", { type: "button", role: "option", "aria-selected": isSelected, disabled: o.disabled, onClick: () => commit(o.value), onMouseEnter: () => setActiveIdx(i), className: `flex w-full items-center gap-2 rounded-[var(--am-radius-control,8px)] px-[10px] py-[7px] text-left text-[13px] transition-colors disabled:opacity-40 ${isSelected
                         ? 'bg-accent-soft text-accent-text font-medium'
                         : i === activeIdx
                             ? 'bg-input text-ink'

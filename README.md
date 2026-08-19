@@ -14,11 +14,14 @@ component, every state, in all three app themes.
 ## Install
 
 ```bash
-npm i "github:BondorAlexandru/AM-ComponentLibrary#v0.2.0"
+npm i "github:BondorAlexandru/AM-ComponentLibrary#v0.3.0"
 ```
 
 `dist/` is committed, so there is **no install-time build** — nothing to fail on
 Vercel or Railway. Pin a tag; don't track `main`.
+
+Runtime dependencies: `clsx`, `tailwind-merge`, `class-variance-authority` —
+the same three shadcn/ui uses, ~10kB gzipped together.
 
 ## Wire it up
 
@@ -45,6 +48,46 @@ import { AmUiProvider } from '@am/ui'
 import { Spinner } from '@/components/ui/Spinner'   // your brand loader
 
 <AmUiProvider spinner={Spinner}>{children}</AmUiProvider>
+```
+
+## Customise it
+
+Four layers, weakest to strongest. You should never need to fork a component.
+
+**1. Tokens** — colour roles and the geometry scale, from your stylesheet:
+
+```css
+:root {
+  --am-radius-control: 999px;   /* pill buttons everywhere */
+  --am-h-control-md: 38px;      /* taller controls */
+  --am-text-control-md: 13.5px;
+}
+```
+
+Every geometry token is `var(--am-x, <the value it always had>)`, so defining
+nothing renders exactly as before. See the
+[Customising page](https://bondoralexandru.github.io/AM-ComponentLibrary/#customising)
+for the full list.
+
+**2. Theme** — per-component defaults and classes, MUI-style:
+
+```tsx
+<AmUiProvider theme={{ components: {
+  Button: { defaultProps: { variant: 'secondary' }, className: 'uppercase' },
+} }}>
+```
+
+**3. `className`** — wins over both, because `cn` runs `tailwind-merge`:
+
+```tsx
+<Button className="h-12 rounded-full" />   // really replaces the height
+```
+
+**4. Compose** — the `cva` functions are exported, so build your own:
+
+```tsx
+<a className={cn(buttonVariants({ variant: 'tertiary' }), 'gap-1')} />
+<Button asChild><Link to="/x">Or use asChild</Link></Button>
 ```
 
 ## Use it

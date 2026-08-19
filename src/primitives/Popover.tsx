@@ -85,7 +85,7 @@ export function MenuItem({
     <button
       onClick={onClick}
       className={cn(
-        'flex w-full items-center gap-2.5 rounded-[8px] px-2.5 py-[7px] text-left text-[13px] transition-colors',
+        'flex w-full items-center gap-2.5 rounded-[var(--am-radius-control,8px)] px-2.5 py-[7px] text-left text-[13px] transition-colors',
         danger ? 'text-accent-text hover:bg-accent-soft' : 'text-ink-2 hover:bg-input hover:text-ink',
         active && 'bg-input text-ink font-medium',
       )}

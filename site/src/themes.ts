@@ -7,8 +7,8 @@ import { TIER1_COLOR_TOKENS, type Tier1ColorToken } from '@am/ui'
  * palette — the whole point of previewing here is to see what the CMS and AM
  * Campaigns will really render. Sources:
  *
- *   cms-dark    ../CMS/app/globals.css        `:root, :root[data-theme="dark"]`
- *   cms-light   ../CMS/app/globals.css        `:root[data-theme="light"]`
+ *   cms-dark    ../CMS/app/globals.css        `:root[data-theme="dark"]`
+ *   cms-light   ../CMS/app/globals.css        `:root, :root[data-theme="light"]`
  *   campaigns   ../Influencer/src/index.css   `:root`
  *
  * `npm run check:themes` diffs them against those files when the sibling repos
@@ -53,7 +53,7 @@ export const THEMES: Theme[] = [
     id: 'cms-dark',
     label: 'CMS · dark',
     app: 'SpaceBlock CMS',
-    note: 'The CMS default. If a component only works on light, it breaks here first.',
+    note: 'The CMS’s opt-in dark theme. If a component only works on light, it breaks here first.',
     scheme: 'dark',
     roles: {
       canvas: '#080a14',
@@ -81,7 +81,7 @@ export const THEMES: Theme[] = [
     id: 'cms-light',
     label: 'CMS · light',
     app: 'SpaceBlock CMS',
-    note: 'The CMS light override. Note how the on-* roles flip: on-ok is white here, near-black in dark.',
+    note: 'The CMS default since the light-default change. Note how the on-* roles flip: on-ok is white here, near-black in dark.',
     scheme: 'light',
     roles: {
       canvas: '#f6f6f9',
@@ -144,6 +144,12 @@ export const THEMES: Theme[] = [
   },
 ]
 
+/**
+ * Dark first, deliberately — it is the harsher test. A component that assumes a
+ * light canvas breaks here immediately, whereas the reverse often goes unnoticed.
+ * This is the docs' starting view, not a claim about either app's default (the
+ * CMS defaults to light and AM Campaigns is light-only).
+ */
 export const DEFAULT_THEME: ThemeId = 'cms-dark'
 
 export function themeById(id: ThemeId): Theme {

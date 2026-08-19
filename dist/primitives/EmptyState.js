@@ -8,6 +8,7 @@
  */
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { cn } from '../lib/cn.js';
 export function EmptyState({ title, description, icon, action, className = '', size = 'md', chrome = true, }) {
     const sizeClasses = {
         sm: 'py-8',
@@ -19,13 +20,11 @@ export function EmptyState({ title, description, icon, action, className = '', s
         md: 'w-16 h-16',
         lg: 'w-20 h-20',
     };
-    const chromeClasses = chrome ? 'bg-surface rounded-[12px] border border-hairline' : '';
-    return (_jsxs("div", { className: `
+    const chromeClasses = chrome ? 'bg-surface rounded-[var(--am-radius-card,var(--radius-card,12px))] border border-hairline' : '';
+    return (_jsxs("div", { className: cn(`
         flex flex-col items-center justify-center
         text-center ${sizeClasses[size]}
-        ${chromeClasses}
-        ${className}
-      `, children: [icon && (_jsx("div", { className: `
+        ${chromeClasses}`, className), children: [icon && (_jsx("div", { className: `
             ${iconSizes[size]}
             mb-4 text-ink-3
           `, children: icon })), _jsx("h3", { className: "text-lg font-semibold tracking-tight text-ink mb-2", children: title }), description && (_jsx("p", { className: "text-sm text-ink-2 mb-4 max-w-md", children: description })), action && _jsx("div", { className: "mt-2", children: action })] }));

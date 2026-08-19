@@ -7,6 +7,7 @@ import { confirmDialogEntry, menuEntry, modalEntry, popoverEntry } from './entri
 import { iconsEntry, spinnerEntry, tokensEntry, utilsEntry } from './entries/foundations.tsx'
 import { barListEntry, barsEntry, formattersEntry, gaugeEntry, layoutEntry, statEntry } from './entries/data.tsx'
 import { stepperEntry, tabsEntry } from './entries/navigation.tsx'
+import { customisingEntry } from './entries/customising.tsx'
 
 /**
  * The catalogue. Order inside a group is the order in the sidebar.
@@ -17,6 +18,7 @@ import { stepperEntry, tabsEntry } from './entries/navigation.tsx'
  */
 export const ENTRIES: DocEntry[] = [
   tokensEntry,
+  customisingEntry,
   utilsEntry,
   spinnerEntry,
   iconsEntry,

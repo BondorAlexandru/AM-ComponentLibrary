@@ -10,8 +10,10 @@
  */
 export { cn, type ClassValue } from './lib/cn.js';
 export { formatNumber, formatBytes } from './lib/format.js';
-export { AmUiProvider, DefaultSpinner, Spinner, useAmUi, type AmUiContextValue, type SpinnerProps, } from './provider.js';
-export { Button, IconButton } from './primitives/Button.js';
+export { AmUiProvider, DefaultSpinner, Spinner, useAmUi, useComponentTheme, type AmUiContextValue, type AmUiTheme, type ComponentConfig, type ComponentName, type SpinnerProps, } from './theme.js';
+export { Slot } from './lib/Slot.js';
+export { H, R, T, GEOMETRY_TOKENS } from './tokens/geometry.js';
+export { Button, IconButton, buttonVariants, iconButtonVariants, type ButtonProps, type IconButtonProps, type ButtonVariants, type IconButtonVariants, } from './primitives/Button.js';
 export { Badge, Tag, Status } from './primitives/Badge.js';
 export { Card, CardHeader, CardFooter, CardSection } from './primitives/Card.js';
 export { ConfirmDialog } from './primitives/ConfirmDialog.js';

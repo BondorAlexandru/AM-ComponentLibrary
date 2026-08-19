@@ -6,6 +6,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { cn } from '../lib/cn.js'
 
 type BadgeVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'neutral'
 
@@ -43,7 +44,7 @@ export function Badge({ children, variant = 'neutral', size = 'md', dot = false,
   }
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-[6px] font-normal whitespace-nowrap ${chipVariant[variant]} ${sizeClasses[size]} ${className}`}
+      className={cn(`inline-flex items-center gap-1.5 rounded-[var(--am-radius-chip,6px)] font-normal whitespace-nowrap ${chipVariant[variant]} ${sizeClasses[size]}`, className)}
     >
       {dot && <span className={`h-1.5 w-1.5 rounded-full ${dotColors[variant]}`} />}
       {children}
@@ -61,7 +62,7 @@ interface TagProps {
 export function Tag({ children, variant = 'neutral', onRemove, className = '' }: TagProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-[6px] px-[10px] py-[4px] text-[12px] font-normal ${chipVariant[variant]} ${className}`}
+      className={cn(`inline-flex items-center gap-1.5 rounded-[var(--am-radius-chip,6px)] px-[10px] py-[4px] text-[12px] font-normal ${chipVariant[variant]}`, className)}
     >
       {children}
       {onRemove && (
@@ -98,7 +99,7 @@ export function Status({ children, variant = 'neutral', size = 'md', className =
   const dotSizes = { sm: 'h-2 w-2', md: 'h-2.5 w-2.5' }
   const textSizes = { sm: 'text-xs', md: 'text-sm' }
   return (
-    <span className={`inline-flex items-center gap-2 text-ink-2 ${textSizes[size]} ${className}`}>
+    <span className={cn(`inline-flex items-center gap-2 text-ink-2 ${textSizes[size]}`, className)}>
       <span className={`${dotSizes[size]} rounded-full ${dot[variant]}`} />
       {children}
     </span>

@@ -15,6 +15,7 @@ import { Badge, Status } from '../primitives/Badge.js'
 import { Card } from '../primitives/Card.js'
 import { EmptyState } from '../primitives/EmptyState.js'
 import { BarList, Delta, EmptyHint, KpiCard, SectionCard } from '../primitives/Metrics.js'
+import { GEOMETRY_TOKENS } from '../tokens/geometry.js'
 
 /** Class attributes are multi-line template literals; compare as a set. */
 function classesOf(el: Element): Set<string> {
@@ -37,10 +38,12 @@ describe('Button — frozen CMS classes', () => {
     ghost: 'bg-input border border-hairline text-ink-2 hover:text-ink',
   }
 
+  // Geometry is a token now, but the fallback still pins the historical pixel
+  // value — so an app that defines nothing renders exactly as the CMS always has.
   const FROZEN_SIZES: Record<string, string> = {
-    sm: 'h-[28px] px-3 text-[12.5px]',
-    md: 'h-[34px] px-4 text-[13px]',
-    lg: 'h-[40px] px-5 text-[14px]',
+    sm: 'h-[var(--am-h-control-sm,28px)] px-3 text-[var(--am-text-control-sm,12.5px)]',
+    md: 'h-[var(--am-h-control-md,34px)] px-4 text-[var(--am-text-control-md,13px)]',
+    lg: 'h-[var(--am-h-control-lg,40px)] px-5 text-[var(--am-text-control-lg,14px)]',
   }
 
   it.each(Object.entries(FROZEN_VARIANTS))('variant %s is unchanged', (variant, expected) => {
@@ -70,16 +73,16 @@ describe('Button — frozen CMS classes', () => {
     render(<Button data-testid="b">Go</Button>)
     expectClasses(
       screen.getByTestId('b'),
-      'rounded-[8px] focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-canvas',
+      'rounded-[var(--am-radius-control,8px)] focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-canvas',
     )
   })
 })
 
 describe('IconButton — frozen CMS classes', () => {
   it.each([
-    ['sm', 'h-[32px] w-[32px] text-sm'],
-    ['md', 'h-[40px] w-[40px] text-base'],
-    ['lg', 'h-[44px] w-[44px] text-lg'],
+    ['sm', 'h-[var(--am-h-icon-sm,32px)] w-[var(--am-h-icon-sm,32px)] text-sm'],
+    ['md', 'h-[var(--am-h-icon-md,40px)] w-[var(--am-h-icon-md,40px)] text-base'],
+    ['lg', 'h-[var(--am-h-icon-lg,44px)] w-[var(--am-h-icon-lg,44px)] text-lg'],
   ])('size %s is unchanged', (size, expected) => {
     render(<IconButton size={size as 'md'} aria-label="Act" icon={<svg />} />)
     expectClasses(screen.getByLabelText('Act'), expected)
@@ -94,7 +97,7 @@ describe('IconButton — frozen CMS classes', () => {
 describe('Badge / Status — frozen CMS classes', () => {
   it('primary chip keeps the 6px radius and soft accent fill', () => {
     render(<Badge variant="primary">New</Badge>)
-    expectClasses(screen.getByText('New'), 'rounded-[6px] bg-accent-soft text-accent-text')
+    expectClasses(screen.getByText('New'), 'rounded-[var(--am-radius-chip,6px)] bg-accent-soft text-accent-text')
   })
 
   it('success chip is outline-only', () => {
@@ -113,14 +116,20 @@ describe('Badge / Status — frozen CMS classes', () => {
 describe('Card — frozen CMS classes', () => {
   it('keeps the 12px surface card with a hairline border', () => {
     const { container } = render(<Card>body</Card>)
-    expectClasses(container.firstElementChild as Element, 'bg-surface rounded-[12px] border border-hairline')
+    expectClasses(
+      container.firstElementChild as Element,
+      'bg-surface rounded-[var(--am-radius-card,var(--radius-card,12px))] border border-hairline',
+    )
   })
 })
 
 describe('EmptyState — chrome is additive', () => {
   it('draws the card by default (the CMS behaviour)', () => {
     const { container } = render(<EmptyState title="Nothing here" />)
-    expectClasses(container.firstElementChild as Element, 'bg-surface rounded-[12px] border border-hairline')
+    expectClasses(
+      container.firstElementChild as Element,
+      'bg-surface rounded-[var(--am-radius-card,var(--radius-card,12px))] border border-hairline',
+    )
   })
 
   it('drops the card when chrome is false', () => {
@@ -184,5 +193,49 @@ describe('Metrics — frozen CMS classes', () => {
   it('EmptyHint keeps its dashed inset panel', () => {
     const { container } = render(<EmptyHint>Nothing here</EmptyHint>)
     expectClasses(container.firstElementChild as Element, 'border-dashed border-hairline rounded-2xl bg-input')
+  })
+})
+
+/**
+ * The geometry tokens are what make the library restyleable, and their fallbacks
+ * are what keep the CMS looking identical while nothing defines them. If a
+ * fallback drifts, every app that has *not* opted into the token silently moves.
+ */
+describe('geometry tokens — fallbacks pin the historical rendering', () => {
+  const HISTORICAL: Record<string, string> = {
+    '--am-h-control-sm': '28px',
+    '--am-h-control-md': '34px',
+    '--am-h-control-lg': '40px',
+    '--am-h-icon-sm': '32px',
+    '--am-h-icon-md': '40px',
+    '--am-h-icon-lg': '44px',
+    '--am-h-field-sm': '32px',
+    '--am-h-field-md': '40px',
+    '--am-h-field-lg': '48px',
+    '--am-radius-chip': '6px',
+    '--am-radius-control': '8px',
+    '--am-radius-panel': '10px',
+    '--am-radius-card': 'var(--radius-card, 12px)',
+    '--am-radius-pill': 'var(--radius-pill, 999px)',
+    '--am-text-control-sm': '12.5px',
+    '--am-text-control-md': '13px',
+    '--am-text-control-lg': '14px',
+    '--am-text-field-sm': '14px',
+    '--am-text-field-md': '13.5px',
+    '--am-text-field-lg': '18px',
+  }
+
+  it.each(Object.entries(HISTORICAL))('%s falls back to %s', (token, expected) => {
+    const row = GEOMETRY_TOKENS.find((t) => t.token === token)
+    expect(row, `${token} is missing from GEOMETRY_TOKENS`).toBeDefined()
+    expect(row!.fallback).toBe(expected)
+  })
+
+  it('documents every token and nothing more', () => {
+    expect(GEOMETRY_TOKENS.map((t) => t.token).sort()).toEqual(Object.keys(HISTORICAL).sort())
+  })
+
+  it('every token carries a role description', () => {
+    for (const t of GEOMETRY_TOKENS) expect(t.role.length, t.token).toBeGreaterThan(4)
   })
 })

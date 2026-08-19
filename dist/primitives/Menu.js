@@ -87,10 +87,10 @@ export function Menu({ items, trigger, align = 'right', buttonClassName = '', 'a
                 left: coords?.left,
                 right: coords?.right,
                 visibility: coords ? 'visible' : 'hidden',
-            }, className: "z-[100] w-[196px] rounded-[10px] border border-hairline bg-surface shadow-[0_8px_12px_rgba(0,0,0,0.25)] p-[6px] flex flex-col gap-[2px]", children: items.map((item, i) => (_jsxs("button", { type: "button", role: "menuitem", disabled: item.disabled, onClick: () => {
+            }, className: "z-[100] w-[196px] rounded-[var(--am-radius-panel,10px)] border border-hairline bg-surface shadow-[0_8px_12px_rgba(0,0,0,0.25)] p-[6px] flex flex-col gap-[2px]", children: items.map((item, i) => (_jsxs("button", { type: "button", role: "menuitem", disabled: item.disabled, onClick: () => {
                     setOpen(false);
                     item.onClick();
-                }, className: `flex w-full items-center gap-[10px] px-[10px] py-[8px] text-[13px] font-medium rounded-[8px] text-left transition-colors disabled:opacity-40 ${item.variant === 'danger'
+                }, className: `flex w-full items-center gap-[10px] px-[10px] py-[8px] text-[13px] font-medium rounded-[var(--am-radius-control,8px)] text-left transition-colors disabled:opacity-40 ${item.variant === 'danger'
                     ? 'text-danger-accent hover:bg-danger-accent/10'
                     : 'text-ink hover:bg-input'}`, children: [item.icon && _jsx("span", { className: "w-3.5 h-3.5 flex-shrink-0 grid place-items-center [&>svg]:w-3.5 [&>svg]:h-3.5", children: item.icon }), item.label] }, i))) }), document.body)
         : null;
@@ -104,6 +104,6 @@ export function Menu({ items, trigger, align = 'right', buttonClassName = '', 'a
                         return next;
                     });
                 }, className: buttonClassName ||
-                    'inline-flex items-center justify-center h-9 w-9 rounded-[8px] text-ink-3 hover:bg-input hover:text-ink transition-colors', children: trigger ?? _jsx(MoreHorizontal, { className: "w-4 h-4" }) }), dropdown] }));
+                    'inline-flex items-center justify-center h-9 w-9 rounded-[var(--am-radius-control,8px)] text-ink-3 hover:bg-input hover:text-ink transition-colors', children: trigger ?? _jsx(MoreHorizontal, { className: "w-4 h-4" }) }), dropdown] }));
 }
 //# sourceMappingURL=Menu.js.map

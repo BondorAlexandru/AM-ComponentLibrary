@@ -5,6 +5,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { cn } from '../lib/cn.js'
 
 interface CardProps {
   children: ReactNode
@@ -47,15 +48,13 @@ export function Card({
 
   return (
     <div
-      className={`
-        bg-surface rounded-[12px]
+      className={cn(`
+        bg-surface rounded-[var(--am-radius-card,var(--radius-card,12px))]
         ${paddingClasses[padding]}
         ${shadowClasses[shadow]}
         ${borderClass}
         ${hoverClass}
-        ${clickableClass}
-        ${className}
-      `}
+        ${clickableClass}`, className)}
       onClick={onClick}
     >
       {children}
@@ -73,7 +72,7 @@ interface CardHeaderProps {
 
 export function CardHeader({ title, subtitle, action, className = '' }: CardHeaderProps) {
   return (
-    <div className={`flex items-start justify-between mb-4 ${className}`}>
+    <div className={cn(`flex items-start justify-between mb-4`, className)}>
       <div className="flex-1 min-w-0">
         <h3 className="text-lg font-semibold tracking-tight text-ink truncate">{title}</h3>
         {subtitle && (
@@ -94,11 +93,9 @@ interface CardFooterProps {
 export function CardFooter({ children, className = '' }: CardFooterProps) {
   return (
     <div
-      className={`
+      className={cn(`
         flex items-center justify-between
-        pt-4 mt-4 border-t border-hairline
-        ${className}
-      `}
+        pt-4 mt-4 border-t border-hairline`, className)}
     >
       {children}
     </div>
@@ -114,7 +111,7 @@ interface CardSectionProps {
 
 export function CardSection({ children, title, className = '' }: CardSectionProps) {
   return (
-    <div className={`py-4 ${className}`}>
+    <div className={cn(`py-4`, className)}>
       {title && (
         <h4 className="text-sm font-medium text-ink-2 mb-2">{title}</h4>
       )}

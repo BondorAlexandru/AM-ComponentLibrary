@@ -1,28 +1,21 @@
-/**
- * Class-name joiner. Deliberately dependency-free — the library's only
- * runtime peers are react/react-dom, so a consumer never inherits a
- * transitive version conflict for something this small.
- *
- * Accepts the `clsx` argument shapes the apps already use (strings, arrays,
- * conditional objects, falsy) so `cn` is a drop-in for AM Campaigns'
- * `src/lib/cn.ts`.
- */
-export type ClassValue = string | number | null | undefined | false | ClassValue[] | Record<string, unknown>
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
+export type { ClassValue }
+
+/**
+ * Join class names, then resolve Tailwind conflicts so the *last* one wins.
+ *
+ * The `twMerge` half is what makes `className` a real override rather than a
+ * suggestion. Two utilities of the same kind have identical CSS specificity, so
+ * without it the winner is decided by the order Tailwind happened to emit them
+ * in the stylesheet — not by the order you wrote them. `cn('h-[34px]', 'h-12')`
+ * would leave both classes on the element and give you whichever Tailwind felt
+ * like. Now it emits `h-12` alone.
+ *
+ * This is why every component takes the caller's `className` last: base classes,
+ * then the theme's per-component classes, then yours. Yours win.
+ */
 export function cn(...inputs: ClassValue[]): string {
-  const out: string[] = []
-  for (const input of inputs) {
-    if (!input) continue
-    if (typeof input === 'string' || typeof input === 'number') {
-      out.push(String(input))
-    } else if (Array.isArray(input)) {
-      const nested = cn(...input)
-      if (nested) out.push(nested)
-    } else {
-      for (const key in input) {
-        if (input[key]) out.push(key)
-      }
-    }
-  }
-  return out.join(' ')
+  return twMerge(clsx(inputs))
 }

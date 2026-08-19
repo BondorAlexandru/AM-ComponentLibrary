@@ -10,6 +10,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { cn } from '../lib/cn.js'
 
 interface EmptyStateProps {
   title: string
@@ -43,16 +44,14 @@ export function EmptyState({
     lg: 'w-20 h-20',
   }
 
-  const chromeClasses = chrome ? 'bg-surface rounded-[12px] border border-hairline' : ''
+  const chromeClasses = chrome ? 'bg-surface rounded-[var(--am-radius-card,var(--radius-card,12px))] border border-hairline' : ''
 
   return (
     <div
-      className={`
+      className={cn(`
         flex flex-col items-center justify-center
         text-center ${sizeClasses[size]}
-        ${chromeClasses}
-        ${className}
-      `}
+        ${chromeClasses}`, className)}
     >
       {icon && (
         <div

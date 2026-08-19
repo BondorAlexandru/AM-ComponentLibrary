@@ -22,16 +22,17 @@ const SOURCES = [
   {
     themeId: 'cms-dark',
     file: resolve(repo, '../CMS/app/globals.css'),
-    label: 'CMS dark  (:root, :root[data-theme="dark"])',
-    // The dark block is the combined `:root, :root[data-theme="dark"]` selector.
-    block: (css) => sliceBlock(css, ':root,\n:root[data-theme="dark"] {'),
+    label: 'CMS dark  (:root[data-theme="dark"])',
+    // Dark is opt-in since the CMS switched its default to light; the light
+    // values live on the combined `:root, :root[data-theme="light"]` selector.
+    block: (css) => sliceBlock(css, ':root[data-theme="dark"] {'),
     varFor: (role) => `--sb-${role === 'danger-accent' ? 'danger' : role}`,
   },
   {
     themeId: 'cms-light',
     file: resolve(repo, '../CMS/app/globals.css'),
-    label: 'CMS light (:root[data-theme="light"])',
-    block: (css) => sliceBlock(css, ':root[data-theme="light"] {'),
+    label: 'CMS light (:root, :root[data-theme="light"]) — the CMS default',
+    block: (css) => sliceBlock(css, ':root,\n:root[data-theme="light"] {'),
     varFor: (role) => `--sb-${role === 'danger-accent' ? 'danger' : role}`,
   },
   {

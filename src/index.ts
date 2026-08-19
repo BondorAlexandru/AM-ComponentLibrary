@@ -17,12 +17,33 @@ export {
   DefaultSpinner,
   Spinner,
   useAmUi,
+  useComponentTheme,
   type AmUiContextValue,
+  type AmUiTheme,
+  type ComponentConfig,
+  type ComponentName,
   type SpinnerProps,
-} from './provider.js'
+} from './theme.js'
+
+// The `asChild` implementation, exported so an app can build its own polymorphic
+// component on the same merge rules.
+export { Slot } from './lib/Slot.js'
+
+// The geometry scale. Every value is a CSS var with today's rendering as its
+// fallback, so defining one restyles the library and defining none changes nothing.
+export { H, R, T, GEOMETRY_TOKENS } from './tokens/geometry.js'
 
 // Canonical CMS primitives — class strings frozen, see docs/CONTRIBUTING.md.
-export { Button, IconButton } from './primitives/Button.js'
+export {
+  Button,
+  IconButton,
+  buttonVariants,
+  iconButtonVariants,
+  type ButtonProps,
+  type IconButtonProps,
+  type ButtonVariants,
+  type IconButtonVariants,
+} from './primitives/Button.js'
 export { Badge, Tag, Status } from './primitives/Badge.js'
 export { Card, CardHeader, CardFooter, CardSection } from './primitives/Card.js'
 export { ConfirmDialog } from './primitives/ConfirmDialog.js'

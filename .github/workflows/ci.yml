@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test (frozen class strings + behaviour)
+        run: npm test
+
+      # dist/ is committed and both consumers run it with no install-time build,
+      # so a stale dist means production silently runs old components.
+      - name: dist/ is up to date
+        run: |
+          npm run build
+          if ! git diff --quiet -- dist; then
+            echo "::error::dist/ is stale. Run 'npm run build' and commit dist/."
+            git diff --stat -- dist
+            exit 1
+          fi

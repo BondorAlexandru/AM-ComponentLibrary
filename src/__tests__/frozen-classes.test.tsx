@@ -15,7 +15,7 @@ import { Badge, Status } from '../primitives/Badge.js'
 import { Card } from '../primitives/Card.js'
 import { EmptyState } from '../primitives/EmptyState.js'
 import { BarList, Delta, EmptyHint, KpiCard, SectionCard } from '../primitives/Metrics.js'
-import { GEOMETRY_TOKENS } from '../tokens/geometry.js'
+import { GEOMETRY_TOKENS, T } from '../tokens/geometry.js'
 
 /** Class attributes are multi-line template literals; compare as a set. */
 function classesOf(el: Element): Set<string> {
@@ -41,9 +41,9 @@ describe('Button — frozen CMS classes', () => {
   // Geometry is a token now, but the fallback still pins the historical pixel
   // value — so an app that defines nothing renders exactly as the CMS always has.
   const FROZEN_SIZES: Record<string, string> = {
-    sm: 'h-[var(--am-h-control-sm,28px)] px-3 text-[var(--am-text-control-sm,12.5px)]',
-    md: 'h-[var(--am-h-control-md,34px)] px-4 text-[var(--am-text-control-md,13px)]',
-    lg: 'h-[var(--am-h-control-lg,40px)] px-5 text-[var(--am-text-control-lg,14px)]',
+    sm: 'h-[var(--am-h-control-sm,28px)] px-3 text-[length:var(--am-text-control-sm,12.5px)]',
+    md: 'h-[var(--am-h-control-md,34px)] px-4 text-[length:var(--am-text-control-md,13px)]',
+    lg: 'h-[var(--am-h-control-lg,40px)] px-5 text-[length:var(--am-text-control-lg,14px)]',
   }
 
   it.each(Object.entries(FROZEN_VARIANTS))('variant %s is unchanged', (variant, expected) => {
@@ -237,5 +237,27 @@ describe('geometry tokens — fallbacks pin the historical rendering', () => {
 
   it('every token carries a role description', () => {
     for (const t of GEOMETRY_TOKENS) expect(t.role.length, t.token).toBeGreaterThan(4)
+  })
+})
+
+/**
+ * Regression guard for a bug that shipped once.
+ *
+ * `text-[var(--x,13px)]` is ambiguous — Tailwind cannot tell a font-size from a
+ * colour once the value is a `var()`, so it silently emits `color:` and every
+ * control loses its font-size. Nothing fails: the class exists, the CSS is
+ * valid, it is just the wrong property. Only reading the compiled stylesheet
+ * catches it, so this pins the `length:` hint instead.
+ */
+describe('type tokens carry the length: hint', () => {
+  it.each(Object.entries(T))('T.%s disambiguates to a length', (name, cls) => {
+    expect(cls.startsWith('text-[length:var('), `${name} = ${cls}`).toBe(true)
+  })
+
+  it('no primitive uses the ambiguous bare form', async () => {
+    const mods = import.meta.glob('../primitives/*.tsx', { query: '?raw', import: 'default', eager: true })
+    for (const [file, src] of Object.entries(mods)) {
+      expect(String(src).includes('text-[var('), `${file} uses ambiguous text-[var(`).toBe(false)
+    }
   })
 })

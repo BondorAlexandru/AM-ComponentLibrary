@@ -21,7 +21,7 @@ function Label({ children, htmlFor, required, action, className = '' }) {
 const TextInput = forwardRef(({ error, size = 'md', className = '', ...props }, ref) => {
     const sizeClasses = {
         sm: 'h-[var(--am-h-field-sm,32px)] px-2 text-sm',
-        md: 'h-[var(--am-h-field-md,40px)] px-[13px] text-[var(--am-text-field-md,13.5px)]',
+        md: 'h-[var(--am-h-field-md,40px)] px-[13px] text-[length:var(--am-text-field-md,13.5px)]',
         lg: 'h-[var(--am-h-field-lg,48px)] px-4 text-lg',
     };
     const errorClasses = error
@@ -44,7 +44,7 @@ const Textarea = forwardRef(({ error, resize = 'vertical', className = '', ...pr
         : 'border-line focus:border-[1.5px] focus:border-accent focus:ring-accent/30';
     const resizeClass = resize === 'none' ? 'resize-none' : `resize-${resize}`;
     return (_jsx("textarea", { ref: ref, className: cn(`
-          w-full rounded-[var(--am-radius-control,8px)] px-[13px] py-[10px] text-[var(--am-text-field-md,13.5px)]
+          w-full rounded-[var(--am-radius-control,8px)] px-[13px] py-[10px] text-[length:var(--am-text-field-md,13.5px)]
           ${errorClasses}
           ${resizeClass}
           border bg-input text-ink
@@ -59,7 +59,7 @@ Textarea.displayName = 'Textarea';
 const Select = ({ error, size = 'md', children, className = '', value, onChange, disabled, ...props }) => {
     const sizeClasses = {
         sm: 'h-[var(--am-h-field-sm,32px)] pl-2 pr-[8px] text-sm',
-        md: 'h-[var(--am-h-field-md,40px)] pl-[13px] pr-[10px] text-[var(--am-text-field-md,13.5px)]',
+        md: 'h-[var(--am-h-field-md,40px)] pl-[13px] pr-[10px] text-[length:var(--am-text-field-md,13.5px)]',
         lg: 'h-[var(--am-h-field-lg,48px)] pl-4 pr-[12px] text-lg',
     };
     const errorClasses = error ? 'border-danger-accent' : 'border-line hover:border-accent/60 focus-visible:border-accent';

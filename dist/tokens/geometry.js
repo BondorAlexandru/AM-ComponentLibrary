@@ -54,12 +54,15 @@ export const R = {
  * literal; override those through the theme's per-component `className`.
  */
 export const T = {
-    controlSm: 'text-[var(--am-text-control-sm,12.5px)]',
-    controlMd: 'text-[var(--am-text-control-md,13px)]',
-    controlLg: 'text-[var(--am-text-control-lg,14px)]',
-    fieldSm: 'text-[var(--am-text-field-sm,14px)]',
-    fieldMd: 'text-[var(--am-text-field-md,13.5px)]',
-    fieldLg: 'text-[var(--am-text-field-lg,18px)]',
+    // NOTE the `length:` hint. `text-[var(--x,13px)]` is ambiguous — Tailwind
+    // cannot tell a font-size from a colour once the value is a var(), and
+    // silently picks `color`. That shipped a broken font-size once; don't drop it.
+    controlSm: 'text-[length:var(--am-text-control-sm,12.5px)]',
+    controlMd: 'text-[length:var(--am-text-control-md,13px)]',
+    controlLg: 'text-[length:var(--am-text-control-lg,14px)]',
+    fieldSm: 'text-[length:var(--am-text-field-sm,14px)]',
+    fieldMd: 'text-[length:var(--am-text-field-md,13.5px)]',
+    fieldLg: 'text-[length:var(--am-text-field-lg,18px)]',
 };
 /** Every token this library reads, with the value it falls back to. For the docs. */
 export const GEOMETRY_TOKENS = [

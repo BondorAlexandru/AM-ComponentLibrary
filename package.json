@@ -1,6 +1,6 @@
 {
   "name": "@am/ui",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "AM shared design system \u2014 token-driven React primitives for the CMS (SpaceBlock) and AM Campaigns apps.",
   "license": "UNLICENSED",
   "type": "module",

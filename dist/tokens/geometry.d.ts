@@ -54,12 +54,12 @@ export declare const R: {
  * literal; override those through the theme's per-component `className`.
  */
 export declare const T: {
-    readonly controlSm: "text-[var(--am-text-control-sm,12.5px)]";
-    readonly controlMd: "text-[var(--am-text-control-md,13px)]";
-    readonly controlLg: "text-[var(--am-text-control-lg,14px)]";
-    readonly fieldSm: "text-[var(--am-text-field-sm,14px)]";
-    readonly fieldMd: "text-[var(--am-text-field-md,13.5px)]";
-    readonly fieldLg: "text-[var(--am-text-field-lg,18px)]";
+    readonly controlSm: "text-[length:var(--am-text-control-sm,12.5px)]";
+    readonly controlMd: "text-[length:var(--am-text-control-md,13px)]";
+    readonly controlLg: "text-[length:var(--am-text-control-lg,14px)]";
+    readonly fieldSm: "text-[length:var(--am-text-field-sm,14px)]";
+    readonly fieldMd: "text-[length:var(--am-text-field-md,13.5px)]";
+    readonly fieldLg: "text-[length:var(--am-text-field-lg,18px)]";
 };
 /** Every token this library reads, with the value it falls back to. For the docs. */
 export declare const GEOMETRY_TOKENS: {

@@ -8,6 +8,8 @@
  * a deliberate decision (and a CMS changelog entry) — not a passing test.
  */
 
+import { readFileSync, readdirSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { Button, IconButton } from '../primitives/Button.js'
@@ -254,10 +256,14 @@ describe('type tokens carry the length: hint', () => {
     expect(cls.startsWith('text-[length:var('), `${name} = ${cls}`).toBe(true)
   })
 
-  it('no primitive uses the ambiguous bare form', async () => {
-    const mods = import.meta.glob('../primitives/*.tsx', { query: '?raw', import: 'default', eager: true })
-    for (const [file, src] of Object.entries(mods)) {
-      expect(String(src).includes('text-[var('), `${file} uses ambiguous text-[var(`).toBe(false)
+  it('no primitive uses the ambiguous bare form', () => {
+    // vitest serves import.meta.url over its own scheme, so resolve from cwd
+    // (the package root) rather than from the module URL.
+    const dir = resolve(process.cwd(), 'src/primitives')
+    for (const file of readdirSync(dir)) {
+      if (!file.endsWith('.tsx')) continue
+      const src = readFileSync(join(dir, file), 'utf8')
+      expect(src.includes('text-[var('), `${file} uses the ambiguous text-[var(`).toBe(false)
     }
   })
 })

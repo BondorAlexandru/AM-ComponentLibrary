@@ -11,7 +11,7 @@ Token-driven React 19 primitives, zero runtime dependencies, one look.
 ## Install
 
 ```bash
-npm i "github:BondorAlexandru/AM-ComponentLibrary#v0.1.0"
+npm i "github:BondorAlexandru/AM-ComponentLibrary#v0.1.3"
 ```
 
 `dist/` is committed, so there is **no install-time build** — nothing to fail on

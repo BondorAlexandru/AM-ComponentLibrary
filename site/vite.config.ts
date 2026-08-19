@@ -12,11 +12,18 @@ import { fileURLToPath } from 'node:url'
  * at source.
  *
  * `base` targets GitHub Pages at /AM-ComponentLibrary/.
+ *
+ * `dedupe` is load-bearing. This app has its own node_modules with its own react,
+ * while `../src` resolves react from the repo root — two copies, which means two
+ * React instances and "invalid hook call" on the first stateful component.
+ * @vitejs/plugin-react already dedupes these implicitly; stating it here means a
+ * plugin change cannot silently take that away.
  */
 export default defineConfig({
   base: process.env.SITE_BASE ?? '/AM-ComponentLibrary/',
   plugins: [react(), tailwindcss()],
   resolve: {
+    dedupe: ['react', 'react-dom'],
     alias: [
       { find: '@am/ui/icons', replacement: fileURLToPath(new URL('../src/icons/index.tsx', import.meta.url)) },
       { find: '@am/ui', replacement: fileURLToPath(new URL('../src/index.ts', import.meta.url)) },

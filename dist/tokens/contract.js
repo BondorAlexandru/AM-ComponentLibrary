@@ -12,7 +12,9 @@
  *
  * A consumer proves it satisfies the contract with `findMissingTokens()` in a
  * browser test — a missing token is otherwise invisible until someone opens the
- * one screen that uses it.
+ * one screen that uses it. Read that function's doc comment before using it:
+ * `@theme inline` means there is no `--color-*` property to read back, so the
+ * app must pass its own role → variable map.
  */
 /** Colour roles. Consumed as `bg-<name>` / `text-<name>` / `border-<name>`. */
 export const TIER1_COLOR_TOKENS = [
@@ -49,17 +51,69 @@ export const TIER2_TOKENS = [
 ];
 /** Keyframe animation utilities required by `Modal`, `Drawer` and `Popover`. */
 export const TIER2_ANIMATIONS = ['animate-fade-in', 'animate-slide-in', 'animate-pop-in'];
+/** The CMS's mapping (`app/globals.css`). */
+export const CMS_TOKEN_MAP = {
+    canvas: '--sb-canvas',
+    surface: '--sb-surface',
+    'surface-2': '--sb-surface-2',
+    ink: '--sb-ink',
+    'ink-2': '--sb-ink-2',
+    'ink-3': '--sb-ink-3',
+    accent: '--sb-accent',
+    'accent-text': '--sb-accent-text',
+    'accent-soft': '--sb-accent-soft',
+    'on-accent': '--sb-on-accent',
+    ok: '--sb-ok',
+    'on-ok': '--sb-on-ok',
+    warn: '--sb-warn',
+    'danger-accent': '--sb-danger',
+    'on-danger': '--sb-on-danger',
+    line: '--sb-line',
+    hairline: '--sb-hairline',
+    input: '--sb-input',
+};
+/** AM Campaigns' mapping (`src/index.css`). */
+export const CAMPAIGNS_TOKEN_MAP = {
+    canvas: '--canvas',
+    surface: '--surface',
+    'surface-2': '--surface-2',
+    ink: '--ink',
+    'ink-2': '--ink-2',
+    'ink-3': '--ink-3',
+    accent: '--accent',
+    'accent-text': '--accent-text',
+    'accent-soft': '--accent-soft',
+    'on-accent': '--on-accent',
+    ok: '--ok',
+    'on-ok': '--on-ok',
+    warn: '--warn',
+    'danger-accent': '--danger',
+    'on-danger': '--on-danger',
+    line: '--line',
+    hairline: '--hairline',
+    input: '--input',
+};
 /**
- * Returns the tier-1 colour roles the current document does *not* resolve.
- * Call from a jsdom/browser test after the app's stylesheet is loaded.
+ * Returns the tier-1 colour roles the app does not satisfy — either absent from
+ * `map`, or mapped to a custom property that resolves to nothing.
  *
- * Tailwind v4 registers each `@theme` colour as a `--color-<name>` custom
- * property on `:root`, so a resolved value is proof the app mapped the role.
+ * Call it where the app's real stylesheet is loaded: an e2e/browser test, not
+ * jsdom (jsdom does not evaluate an external stylesheet, so every role would
+ * read as missing).
+ *
+ * ```ts
+ * expect(findMissingTokens(CAMPAIGNS_TOKEN_MAP)).toEqual([])
+ * ```
  */
-export function findMissingTokens(root = typeof document === 'undefined' ? null : document.documentElement) {
+export function findMissingTokens(map, root = typeof document === 'undefined' ? null : document.documentElement) {
     if (!root)
         return [...TIER1_COLOR_TOKENS];
     const style = getComputedStyle(root);
-    return TIER1_COLOR_TOKENS.filter((name) => style.getPropertyValue(`--color-${name}`).trim() === '');
+    return TIER1_COLOR_TOKENS.filter((role) => {
+        const cssVar = map[role];
+        if (!cssVar)
+            return true;
+        return style.getPropertyValue(cssVar).trim() === '';
+    });
 }
 //# sourceMappingURL=contract.js.map

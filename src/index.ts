@@ -41,6 +41,9 @@ export {
   TIER1_COLOR_TOKENS,
   TIER2_TOKENS,
   TIER2_ANIMATIONS,
+  CMS_TOKEN_MAP,
+  CAMPAIGNS_TOKEN_MAP,
   findMissingTokens,
   type Tier1ColorToken,
+  type TokenMap,
 } from './tokens/contract.js'

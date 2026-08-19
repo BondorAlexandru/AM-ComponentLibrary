@@ -15,8 +15,11 @@ This file and that one must agree.
 
 ## Tier 1 — required by every consumer
 
-Consumed as `bg-<name>`, `text-<name>`, `border-<name>`. Tailwind v4 registers
-each as `--color-<name>` on `:root`.
+Consumed as `bg-<name>`, `text-<name>`, `border-<name>`.
+
+Both apps declare these with **`@theme inline`**, which substitutes the value
+into each utility (`.bg-ok{background-color:var(--ok)}`) rather than emitting a
+`--color-ok` property. That matters for verification — see below.
 
 | Role | What it means | CMS (light) | CMS (dark, default) | AM Campaigns |
 |---|---|---|---|---|
@@ -47,16 +50,27 @@ theme and unreadable in the other — that is rule §C.2.
 ### Verifying an app satisfies tier 1
 
 ```ts
-import { findMissingTokens } from '@am/ui'
+import { findMissingTokens, CAMPAIGNS_TOKEN_MAP } from '@am/ui'
 
-it('defines every tier-1 design token', () => {
-  expect(findMissingTokens()).toEqual([])
+it('defines every tier-1 design token', async () => {
+  expect(await page.evaluate(() => findMissingTokens(CAMPAIGNS_TOKEN_MAP))).toEqual([])
 })
 ```
 
-Run it where the app's real stylesheet is loaded (a browser/e2e test, not jsdom —
-jsdom does not evaluate `@theme`). A missing token is otherwise invisible until
-someone opens the one screen that uses it.
+The map is required, and the reason is worth understanding rather than working
+around. Because both apps use `@theme inline`, there is **no `--color-*` property
+to read back** — and no app-agnostic name to guess either: the CMS calls the `ok`
+role `--sb-ok` and the `danger-accent` role `--sb-danger`. Probing a rendered
+element doesn't help, because Tailwind is JIT: `bg-warn` has no rule at all until
+some scanned file uses it, and a missing rule looks identical to a missing token.
+
+`CMS_TOKEN_MAP` and `CAMPAIGNS_TOKEN_MAP` ship with the library and are asserted
+against both apps' CSS in `src/__tests__/tokens.test.ts`.
+
+Run the check where the app's real stylesheet is loaded — an e2e/browser test,
+not jsdom, which does not evaluate an external stylesheet. What it catches is the
+thing that actually happens: someone deletes or renames a variable in the app's
+CSS, and every component using that role silently goes transparent.
 
 ---
 

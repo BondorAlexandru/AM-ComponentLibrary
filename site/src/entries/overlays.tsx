@@ -16,9 +16,36 @@ import type { DocEntry } from '../types.ts'
 
 /**
  * Overlays are open/closed by definition, so each specimen is a real trigger.
- * A screenshot of an open modal would not show that Escape closes it or that
- * body scroll locks — the point of a live docs site is that you can check.
+ * A screenshot of an open modal would not show that Escape closes it, that body
+ * scroll locks, or that it now animates *out* as well as in — the point of a
+ * live docs site is that you can check.
+ *
+ * Every one of these has an exit animation, which is the part a screenshot can
+ * never document and the part that used to be missing: the panels carried CSS
+ * `animate-*` classes with `animation-fill-mode: both`, so even where the app
+ * had declared the keyframes at all, the finished animation pinned opacity at 1
+ * and no exit was ever visible. Watch them close, not just open.
  */
+
+/** An external open/close switch, so an exit can be replayed without chasing a
+ *  close button inside the panel that is currently sliding away. */
+function ExitWatch({ label, children }: { label: string; children: (open: boolean, close: () => void) => React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="w-full">
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className={`rounded px-2 py-1 text-[11.5px] font-medium ${open ? 'bg-zinc-600 text-zinc-50' : 'bg-zinc-800 text-zinc-200 hover:bg-zinc-700'}`}
+        >
+          {open ? `Close ${label}` : `Open ${label}`}
+        </button>
+        <span className="text-[11.5px] text-zinc-500">open={String(open)}</span>
+      </div>
+      {children(open, () => setOpen(false))}
+    </div>
+  )
+}
 
 function ModalDemo({ label, ...props }: { label: string } & Partial<Parameters<typeof Modal>[0]>) {
   const [open, setOpen] = useState(false)
@@ -97,12 +124,12 @@ export const modalEntry: DocEntry = {
   requires: ['--radius-card', '--shadow-overlay'],
   imports: "import { Modal, Drawer } from '@am/ui'",
   summary:
-    'Two portalled overlays sharing one behaviour hook: Escape closes, body scroll locks while open, focus lands inside, and the previous overflow value is restored on unmount. Modal centres and owns its header; Drawer slides in from the right and owns nothing but the panel.',
+    'Two portalled overlays sharing one behaviour hook: Escape closes, body scroll locks while open, focus lands inside, and the previous overflow value is restored the moment open flips back. Modal centres and pops from 0.96; Drawer slides off its own right edge. Both animate out as well as in, and neither needs a keyframe or a token to do it.',
   props: [
     {
       title: 'Modal',
       rows: [
-        { name: 'open', type: 'boolean', required: true, note: 'Returns null when false — nothing is mounted, so no hidden focus targets.' },
+        { name: 'open', type: 'boolean', required: true, note: 'Controlled. Flipping it to false starts the exit; the panel unmounts once that finishes, so there are no hidden focus targets left behind — but there is a short window where it is still in the DOM.' },
         { name: 'onClose', type: '() => void', required: true, note: 'Called by Escape, the backdrop, and the header close button.' },
         { name: 'title', type: 'string', required: true, note: 'Rendered as the h2. Modal always has a visible title.' },
         { name: 'description', type: 'string', note: 'A line under the title, in ink-2.' },
@@ -114,7 +141,7 @@ export const modalEntry: DocEntry = {
     {
       title: 'Drawer',
       rows: [
-        { name: 'open', type: 'boolean', required: true, note: 'As Modal.' },
+        { name: 'open', type: 'boolean', required: true, note: 'As Modal — including the exit window, during which the panel is still mounted.' },
         { name: 'onClose', type: '() => void', required: true, note: 'As Modal — but there is no built-in close button, so provide one.' },
         { name: 'children', type: 'ReactNode', required: true, note: 'The whole panel. Drawer adds no header or padding.' },
         { name: 'width', type: 'string', default: "'max-w-[min(1120px,94vw)]'", note: 'Wide by default — drawers here hold a record, not a form.' },
@@ -123,6 +150,9 @@ export const modalEntry: DocEntry = {
     },
   ],
   notes: [
+    'Both animate in *and* out. The scrim crossfades (fade) while the panel pops from 0.96 (popCentered, Modal) or slides off its own right edge (slideFrom(\'right\'), Drawer). AnimatePresence wraps the conditional rather than sitting inside it — with the old `if (!open) return null` shape the element was gone before anything could animate it away.',
+    'They used to carry animate-fade-in / animate-slide-in / animate-pop-in. Those had to go, not merely be joined: the CMS never declared the keyframes at all, so there was no enter animation there; and AM Campaigns declares them with animation-fill-mode: both, and a finished CSS animation outranks inline style, which pins opacity at 1 and makes any JS exit invisible. Nothing needs a token now.',
+    'The exit keeps the panel mounted for a couple of hundred milliseconds after open goes false, so the scroll lock and focus restore fire on the state change rather than on unmount. Cleaning them up on unmount instead would freeze the page for the length of the animation, which reads as the app hanging.',
     'The Escape handler calls stopPropagation, so a Modal opened from inside a Drawer closes only the Modal. Open the nested example and press Escape twice.',
     'Body scroll lock captures and restores the previous overflow value rather than clearing it, so two overlays closing out of order do not leave the page unscrollable.',
     'The backdrop is a hardcoded rgba(10,10,15,0.4) rather than a token — inherited from AM Campaigns, and the one literal colour left in the library.',
@@ -130,7 +160,7 @@ export const modalEntry: DocEntry = {
   states: [
     {
       title: 'Modal',
-      note: 'Every specimen is live. Open one, press Escape, click the backdrop, try scrolling the page behind it.',
+      note: 'Every specimen is live. Open one, press Escape, click the backdrop, try scrolling the page behind it — and watch it leave, which is the half a screenshot cannot show.',
       cols: 3,
       items: [
         { label: 'title + body', node: <ModalDemo label="Basic" /> },
@@ -142,11 +172,55 @@ export const modalEntry: DocEntry = {
       ],
     },
     {
+      title: 'Modal — watching the exit',
+      note: 'The switch is outside the overlay, so you can toggle it repeatedly and watch the panel scale back to 0.96 and the scrim fade under it. Toggle fast: an interrupted exit reverses rather than restarting.',
+      cols: 1,
+      items: [
+        {
+          label: 'an external open/close switch',
+          wide: true,
+          node: (
+            <ExitWatch label="the modal">
+              {(open, close) => (
+                <Modal open={open} onClose={close} title="Rename campaign" description="Close it from the switch above and watch it go.">
+                  <p className="text-ink-2 text-[13px] leading-relaxed">
+                    popCentered on the panel, fade on the scrim. The panel is still mounted for the
+                    length of the exit — the scroll lock releases the moment open flips, not when it
+                    finally unmounts.
+                  </p>
+                </Modal>
+              )}
+            </ExitWatch>
+          ),
+        },
+      ],
+    },
+    {
       title: 'Drawer',
+      note: 'The panel slides off its own right edge on the way out, so the distance is a percentage of its width — one variant serves the 380px filter panel and the 1120px record.',
       cols: 2,
       items: [
         { label: 'default', node: <DrawerDemo /> },
         { label: 'narrow', node: <NarrowDrawerDemo /> },
+        {
+          label: 'watching the exit',
+          note: 'External switch again. Toggle it a few times — a wide panel makes the slow (0.36s) enter and base (0.24s) exit easy to tell apart.',
+          wide: true,
+          node: (
+            <ExitWatch label="the drawer">
+              {(open, close) => (
+                <Drawer open={open} onClose={close} label="Exit demo" width="max-w-[420px]">
+                  <div className="px-6 py-5">
+                    <h2 className="text-ink mb-2 text-[15px] font-semibold">Watch it leave</h2>
+                    <p className="text-ink-2 text-[13px] leading-relaxed">
+                      slideFrom(&apos;right&apos;) on the panel, fade on the scrim.
+                    </p>
+                  </div>
+                </Drawer>
+              )}
+            </ExitWatch>
+          ),
+        },
       ],
     },
   ],
@@ -213,6 +287,9 @@ export const confirmDialogEntry: DocEntry = {
     },
   ],
   notes: [
+    'It animates in and out — the same fade scrim and popCentered panel as Modal. That is the only thing about it that has changed: the markup and every class string are still the CMS’s, which is what keeps it inside the frozen-class rule.',
+    'It carries `use client` now. The directive was previously omitted on purpose — both apps only ever import it from a client component, and the CMS original had none — but AnimatePresence and motion are hook-bearing client components, so the file cannot be a server component any more. Nothing regresses at today’s call sites; a future server-component one is now ruled out rather than merely unlikely.',
+    'The enter and exit are kept at or under ~260ms deliberately: the CMS Playwright suite has 23 hardcoded waitForTimeout calls with retries: 0, several of them on the confirm-delete path.',
     'Unlike Modal, this does not close on Escape or a backdrop click, and does not lock body scroll. On a destructive dialog the extra friction is the feature — but it also means it is the one overlay that does not trap focus.',
     'AM Campaigns deliberately does not use this: it prefers an optimistic action with an undo toast, on the grounds that confirmations get clicked through without being read.',
   ],
@@ -224,6 +301,31 @@ export const confirmDialogEntry: DocEntry = {
         { label: "confirmVariant='danger'", node: <ConfirmDemo /> },
         { label: "confirmVariant='primary'", node: <ConfirmDemo variant="primary" /> },
         { label: 'isLoading', note: 'Open it — confirm spins, cancel is disabled.', node: <ConfirmDemo loading /> },
+      ],
+    },
+    {
+      title: 'Watching the exit',
+      note: 'Cancel and Confirm both close it, and both play the same way out. The external switch lets you replay it without aiming at a button on a panel that is already leaving.',
+      cols: 1,
+      items: [
+        {
+          label: 'an external open/close switch',
+          wide: true,
+          node: (
+            <ExitWatch label="the dialog">
+              {(open, close) => (
+                <ConfirmDialog
+                  isOpen={open}
+                  onClose={close}
+                  onConfirm={close}
+                  title="Delete this page?"
+                  message="Close it from the switch above and watch the panel scale back down while the scrim fades."
+                  confirmText="Delete"
+                />
+              )}
+            </ExitWatch>
+          ),
+        },
       ],
     },
   ],
@@ -259,6 +361,8 @@ export const menuEntry: DocEntry = {
   ],
   notes: [
     'It measures itself after mounting before painting — rendered hidden, positioned, then shown — so it never flashes at the wrong spot. It also re-anchors on scroll and resize while open.',
+    'The panel opens and closes on the pop variant: opacity, a 0.96 scale and a 4px drop, on the snappy spring. transformOrigin follows align, so a right-aligned menu grows from its top-right corner rather than from the middle. The scale floor is 0.96 rather than something more dramatic because the panel is full of text — below about 0.94 the type visibly reflows.',
+    'The measure-then-show pass and the animation are separate steps: it is positioned while hidden, then the pop plays from the right place. Nothing animates from 0,0 to the trigger.',
     'This is not Popover. Menu takes an items array and portals itself; Popover is render-prop driven and sits in flow. Both ship, because they are different jobs.',
   ],
   states: [
@@ -272,6 +376,7 @@ export const menuEntry: DocEntry = {
         { label: 'custom trigger', node: <Menu items={MENU_ITEMS} trigger={<span className="text-ink-2 text-[12.5px]">Actions</span>} buttonClassName="border-line text-ink hover:bg-input inline-flex h-[34px] items-center rounded-[8px] border px-3" /> },
         { label: "align='left'", node: <Menu items={MENU_ITEMS} align="left" /> },
         { label: 'flips near the viewport edge', note: 'Scroll this to the bottom of the window and open it — the panel opens upward.', node: <Menu items={MENU_ITEMS} /> },
+        { label: 'the exit', note: 'Open it, then click away or press Escape. The panel scales back to 0.97 and fades rather than vanishing — hold the kebab and open/close it a few times to see it.', node: <Menu items={MENU_ITEMS} /> },
       ],
     },
     {
@@ -329,6 +434,8 @@ export const popoverEntry: DocEntry = {
   ],
   notes: [
     'It is not portalled. Inside an overflow-hidden ancestor it will be clipped — that is what Menu is for.',
+    'Same pop variant as Menu and Dropdown, in and out — a menu, a dropdown and a popover are the same gesture at three sizes, and they should not each invent their own numbers. transformOrigin follows align, so the panel grows from the corner nearest its trigger.',
+    'It used to carry animate-pop-in. That class is gone: AM Campaigns declares it with animation-fill-mode: both, and a finished CSS animation outranks inline style — which pinned opacity at 1 and made every exit invisible. The two could not coexist.',
     'MenuItem’s danger styling uses accent-soft / accent-text rather than the danger role. It came from AM Campaigns, where the accent magenta is the destructive colour.',
   ],
   states: [
@@ -376,6 +483,11 @@ export const popoverEntry: DocEntry = {
         { label: 'width="w-72"', node: (
           <Popover width="w-72" trigger={({ toggle }) => <Button size="sm" variant="secondary" onClick={toggle}>Wider</Button>}>
             {(close) => <><MenuLabel>A wider panel</MenuLabel><MenuItem onClick={close}>Room for a longer label than usual</MenuItem></>}
+          </Popover>
+        ) },
+        { label: 'the exit', note: 'Open it and click the trigger again rather than an item. The panel scales back and fades out; it is not removed on the frame the state flips.', node: (
+          <Popover trigger={({ open, toggle }) => <Button size="sm" variant="secondary" onClick={toggle}>{open ? 'Close it' : 'Open it'}</Button>}>
+            {(close) => <><MenuItem onClick={close}>Watch it leave</MenuItem><MenuItem onClick={close}>Second row</MenuItem></>}
           </Popover>
         ) },
         { label: 'MenuItem states, flat', note: 'Default, active, danger — outside a popover so all three are visible at once.', node: (

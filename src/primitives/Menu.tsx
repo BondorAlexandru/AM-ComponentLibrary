@@ -14,6 +14,9 @@
 
 import { useState, useRef, useEffect, useCallback, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { AnimatePresence, motion } from 'motion/react'
+import { pop } from '../motion/variants.js'
+import { useVariants } from '../motion/components.js'
 import { MoreHorizontal } from '../icons/index.js'
 
 export interface MenuItem {
@@ -38,6 +41,7 @@ export function Menu({
   'aria-label'?: string
 }) {
   const [open, setOpen] = useState(false)
+  const panelVariants = useVariants(pop)
   // null until measured — we render the portal invisibly, measure, then place it
   // (avoids a one-frame flash at the wrong position).
   const [coords, setCoords] = useState<{ top: number; left?: number; right?: number } | null>(null)
@@ -102,45 +106,64 @@ export function Menu({
     }
   }, [open])
 
+  // AnimatePresence has to outlive `open` for the exit to play, so the portal is
+  // now built unconditionally and the `document` guard is explicit.
+  //
+  // The measure-then-show trick is intact: the panel still mounts at -9999 with
+  // `visibility: hidden` until `place()` reports real coordinates. What is new
+  // is that it also *stays* at the `hidden` variant until then — otherwise the
+  // enter animation would burn its first frames off-screen and the panel would
+  // appear already half-open. Measuring happens in the ref callback, so `coords`
+  // lands in the same commit and nothing paints at the wrong position either way.
   const dropdown =
-    open && typeof document !== 'undefined'
-      ? createPortal(
-          <div
-            ref={setMenuNode}
-            role="menu"
-            style={{
-              position: 'fixed',
-              top: coords?.top ?? -9999,
-              left: coords?.left,
-              right: coords?.right,
-              visibility: coords ? 'visible' : 'hidden',
-            }}
-            className="z-[100] w-[196px] rounded-[var(--am-radius-panel,10px)] border border-hairline bg-surface shadow-[0_8px_12px_rgba(0,0,0,0.25)] p-[6px] flex flex-col gap-[2px]"
-          >
-            {items.map((item, i) => (
-              <button
-                key={i}
-                type="button"
-                role="menuitem"
-                disabled={item.disabled}
-                onClick={() => {
-                  setOpen(false)
-                  item.onClick()
+    typeof document === 'undefined'
+      ? null
+      : createPortal(
+          <AnimatePresence>
+            {open && (
+              <motion.div
+                key="menu"
+                ref={setMenuNode}
+                role="menu"
+                style={{
+                  position: 'fixed',
+                  top: coords?.top ?? -9999,
+                  left: coords?.left,
+                  right: coords?.right,
+                  visibility: coords ? 'visible' : 'hidden',
+                  transformOrigin: align === 'right' ? 'top right' : 'top left',
                 }}
-                className={`flex w-full items-center gap-[10px] px-[10px] py-[8px] text-[13px] font-medium rounded-[var(--am-radius-control,8px)] text-left transition-colors disabled:opacity-40 ${
-                  item.variant === 'danger'
-                    ? 'text-danger-accent hover:bg-danger-accent/10'
-                    : 'text-ink hover:bg-input'
-                }`}
+                variants={panelVariants}
+                initial="hidden"
+                animate={coords ? 'show' : 'hidden'}
+                exit="exit"
+                className="z-[100] w-[196px] rounded-[var(--am-radius-panel,10px)] border border-hairline bg-surface shadow-[0_8px_12px_rgba(0,0,0,0.25)] p-[6px] flex flex-col gap-[2px]"
               >
-                {item.icon && <span className="w-3.5 h-3.5 flex-shrink-0 grid place-items-center [&>svg]:w-3.5 [&>svg]:h-3.5">{item.icon}</span>}
-                {item.label}
-              </button>
-            ))}
-          </div>,
+                {items.map((item, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    role="menuitem"
+                    disabled={item.disabled}
+                    onClick={() => {
+                      setOpen(false)
+                      item.onClick()
+                    }}
+                    className={`flex w-full items-center gap-[10px] px-[10px] py-[8px] text-[13px] font-medium rounded-[var(--am-radius-control,8px)] text-left transition-colors disabled:opacity-40 ${
+                      item.variant === 'danger'
+                        ? 'text-danger-accent hover:bg-danger-accent/10'
+                        : 'text-ink hover:bg-input'
+                    }`}
+                  >
+                    {item.icon && <span className="w-3.5 h-3.5 flex-shrink-0 grid place-items-center [&>svg]:w-3.5 [&>svg]:h-3.5">{item.icon}</span>}
+                    {item.label}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>,
           document.body
         )
-      : null
 
   return (
     <div className="relative">

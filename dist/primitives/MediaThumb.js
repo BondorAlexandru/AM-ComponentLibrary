@@ -1,6 +1,10 @@
 "use client";
 import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import * as React from "react";
+import { motion } from "motion/react";
 import { Film, Play } from "../icons/index.js";
+import { tween } from "../motion/tokens.js";
+import { useMotionEnabled } from "../motion/components.js";
 /**
  * Shared preview for a media value that is only known as a URL.
  *
@@ -35,6 +39,17 @@ function posterSrc(url) {
     return url.includes("#") ? url : `${url}#t=0.1`;
 }
 export function MediaThumb({ src, alt = "", className, style, badge = "md", fallback = null, onError }) {
+    const enabled = useMotionEnabled();
+    // The *URL* that finished loading, not a boolean: changing `src` then has to
+    // earn its fade again, without an effect to reset a flag.
+    const [loadedSrc, setLoadedSrc] = React.useState(null);
+    // A cached image can already be complete before React attaches `onLoad`, in
+    // which case the event never fires and the tile would stay at opacity 0
+    // forever. The ref catches that case on mount.
+    const settle = React.useCallback((el) => {
+        if (el?.complete && src)
+            setLoadedSrc(src);
+    }, [src]);
     if (!src)
         return _jsx(_Fragment, { children: fallback });
     if (isVideoUrl(src)) {
@@ -44,6 +59,17 @@ export function MediaThumb({ src, alt = "", className, style, badge = "md", fall
     }
     /* dynamic CDN media (Bunny CDN) — dimensions unknown */
     /* eslint-disable-next-line @next/next/no-img-element */
-    return _jsx("img", { src: src, alt: alt, className: className, style: style, onError: onError });
+    return (_jsx(motion.img, { ref: settle, src: src, alt: alt, className: className, style: style, 
+        // A grid of thumbnails that each snap in as their bytes land reads as a
+        // page still loading long after it has settled. Fading them in makes the
+        // arrival order stop mattering.
+        initial: enabled ? { opacity: 0 } : false, animate: { opacity: !enabled || loadedSrc === src ? 1 : 0 }, transition: tween('base'), onLoad: () => setLoadedSrc(src), 
+        // A dead URL must still resolve to *something* visible — a permanently
+        // transparent image is indistinguishable from a blank tile, whereas the
+        // browser's broken-image glyph tells the editor what happened.
+        onError: (e) => {
+            setLoadedSrc(src);
+            onError?.(e);
+        } }));
 }
 //# sourceMappingURL=MediaThumb.js.map

@@ -21,10 +21,23 @@
 
 import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { motion } from 'motion/react'
 import { cn } from '../lib/cn.js'
 import { Slot } from '../lib/Slot.js'
 import { Spinner, useComponentTheme } from '../theme.js'
 import { H, R, T } from '../tokens/geometry.js'
+import { SPRING } from '../motion/tokens.js'
+import { useMotionEnabled } from '../motion/components.js'
+
+/**
+ * The press. Nothing on hover — every variant already changes opacity there,
+ * and a button that also grows under the cursor turns a toolbar into a row of
+ * twitching targets. The tap is the one moment the control has to confirm it
+ * received the click, so that is the only moment it moves.
+ */
+const PRESS = { scale: 0.97 } as const
+/** Smaller box, so the same proportional squeeze needs a bigger number. */
+const PRESS_ICON = { scale: 0.92 } as const
 
 /**
  * `primary | secondary | tertiary | danger | success | ghost` are the CMS
@@ -80,6 +93,7 @@ export interface ButtonProps
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(inProps, ref) {
   const { props, className: themeClassName } = useComponentTheme('Button', inProps)
+  const animate = useMotionEnabled()
   const {
     children,
     variant,
@@ -115,10 +129,27 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
     )
   }
 
+  if (!animate) {
+    return (
+      <button ref={ref} disabled={disabled || loading} className={classes} {...rest}>
+        {content}
+      </button>
+    )
+  }
+
   return (
-    <button ref={ref} disabled={disabled || loading} className={classes} {...rest}>
+    <motion.button
+      ref={ref}
+      disabled={disabled || loading}
+      className={classes}
+      whileTap={PRESS}
+      transition={SPRING.snappy}
+      // React's and Motion's drag/animation handlers share names but not
+      // signatures; the rest of the props are identical at runtime.
+      {...(rest as React.ComponentProps<typeof motion.button>)}
+    >
       {content}
-    </button>
+    </motion.button>
   )
 })
 
@@ -167,6 +198,7 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
   ref,
 ) {
   const { props, className: themeClassName } = useComponentTheme('IconButton', inProps)
+  const animate = useMotionEnabled()
   const { icon, variant, size, className, asChild = false, ...rest } = props
   const classes = cn(iconButtonVariants({ variant, size }), themeClassName, className)
 
@@ -178,9 +210,23 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
     )
   }
 
+  if (!animate) {
+    return (
+      <button ref={ref} className={classes} {...rest}>
+        {icon}
+      </button>
+    )
+  }
+
   return (
-    <button ref={ref} className={classes} {...rest}>
+    <motion.button
+      ref={ref}
+      className={classes}
+      whileTap={PRESS_ICON}
+      transition={SPRING.snappy}
+      {...(rest as React.ComponentProps<typeof motion.button>)}
+    >
       {icon}
-    </button>
+    </motion.button>
   )
 })

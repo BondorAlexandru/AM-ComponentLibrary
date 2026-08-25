@@ -13,9 +13,13 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { AnimatePresence, motion } from 'motion/react';
+import { pop } from '../motion/variants.js';
+import { useVariants } from '../motion/components.js';
 import { MoreHorizontal } from '../icons/index.js';
 export function Menu({ items, trigger, align = 'right', buttonClassName = '', 'aria-label': ariaLabel = 'More actions', }) {
     const [open, setOpen] = useState(false);
+    const panelVariants = useVariants(pop);
     // null until measured — we render the portal invisibly, measure, then place it
     // (avoids a one-frame flash at the wrong position).
     const [coords, setCoords] = useState(null);
@@ -80,20 +84,30 @@ export function Menu({ items, trigger, align = 'right', buttonClassName = '', 'a
             document.removeEventListener('keydown', onEsc);
         };
     }, [open]);
-    const dropdown = open && typeof document !== 'undefined'
-        ? createPortal(_jsx("div", { ref: setMenuNode, role: "menu", style: {
-                position: 'fixed',
-                top: coords?.top ?? -9999,
-                left: coords?.left,
-                right: coords?.right,
-                visibility: coords ? 'visible' : 'hidden',
-            }, className: "z-[100] w-[196px] rounded-[var(--am-radius-panel,10px)] border border-hairline bg-surface shadow-[0_8px_12px_rgba(0,0,0,0.25)] p-[6px] flex flex-col gap-[2px]", children: items.map((item, i) => (_jsxs("button", { type: "button", role: "menuitem", disabled: item.disabled, onClick: () => {
-                    setOpen(false);
-                    item.onClick();
-                }, className: `flex w-full items-center gap-[10px] px-[10px] py-[8px] text-[13px] font-medium rounded-[var(--am-radius-control,8px)] text-left transition-colors disabled:opacity-40 ${item.variant === 'danger'
-                    ? 'text-danger-accent hover:bg-danger-accent/10'
-                    : 'text-ink hover:bg-input'}`, children: [item.icon && _jsx("span", { className: "w-3.5 h-3.5 flex-shrink-0 grid place-items-center [&>svg]:w-3.5 [&>svg]:h-3.5", children: item.icon }), item.label] }, i))) }), document.body)
-        : null;
+    // AnimatePresence has to outlive `open` for the exit to play, so the portal is
+    // now built unconditionally and the `document` guard is explicit.
+    //
+    // The measure-then-show trick is intact: the panel still mounts at -9999 with
+    // `visibility: hidden` until `place()` reports real coordinates. What is new
+    // is that it also *stays* at the `hidden` variant until then — otherwise the
+    // enter animation would burn its first frames off-screen and the panel would
+    // appear already half-open. Measuring happens in the ref callback, so `coords`
+    // lands in the same commit and nothing paints at the wrong position either way.
+    const dropdown = typeof document === 'undefined'
+        ? null
+        : createPortal(_jsx(AnimatePresence, { children: open && (_jsx(motion.div, { ref: setMenuNode, role: "menu", style: {
+                    position: 'fixed',
+                    top: coords?.top ?? -9999,
+                    left: coords?.left,
+                    right: coords?.right,
+                    visibility: coords ? 'visible' : 'hidden',
+                    transformOrigin: align === 'right' ? 'top right' : 'top left',
+                }, variants: panelVariants, initial: "hidden", animate: coords ? 'show' : 'hidden', exit: "exit", className: "z-[100] w-[196px] rounded-[var(--am-radius-panel,10px)] border border-hairline bg-surface shadow-[0_8px_12px_rgba(0,0,0,0.25)] p-[6px] flex flex-col gap-[2px]", children: items.map((item, i) => (_jsxs("button", { type: "button", role: "menuitem", disabled: item.disabled, onClick: () => {
+                        setOpen(false);
+                        item.onClick();
+                    }, className: `flex w-full items-center gap-[10px] px-[10px] py-[8px] text-[13px] font-medium rounded-[var(--am-radius-control,8px)] text-left transition-colors disabled:opacity-40 ${item.variant === 'danger'
+                        ? 'text-danger-accent hover:bg-danger-accent/10'
+                        : 'text-ink hover:bg-input'}`, children: [item.icon && _jsx("span", { className: "w-3.5 h-3.5 flex-shrink-0 grid place-items-center [&>svg]:w-3.5 [&>svg]:h-3.5", children: item.icon }), item.label] }, i))) }, "menu")) }), document.body);
     return (_jsxs("div", { className: "relative", children: [_jsx("button", { ref: triggerRef, type: "button", "aria-label": ariaLabel, "aria-haspopup": "menu", "aria-expanded": open, onClick: () => {
                     setOpen((o) => {
                         const next = !o;

@@ -32,6 +32,62 @@ function LiveCheckbox({ label }: { label: string }) {
   return <Form.Checkbox label={label} checked={on} onChange={(e) => setOn(e.target.checked)} />
 }
 
+/** Docs-chrome control — zinc, like the rest of the site chrome, so it stays
+ *  legible on all three canvases and never depends on a token. */
+function Ctl({ onClick, children, active }: { onClick: () => void; children: React.ReactNode; active?: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded px-2 py-1 text-[11.5px] font-medium ${active ? 'bg-zinc-600 text-zinc-50' : 'bg-zinc-800 text-zinc-200 hover:bg-zinc-700'}`}
+    >
+      {children}
+    </button>
+  )
+}
+
+/**
+ * Validation messages animate on the `collapse` variant, so the field below
+ * does not jump when one arrives. The exit is the part worth showing, and the
+ * part with a catch: it only plays if the caller keeps `Form.Error` mounted and
+ * empties its children. Unmounting the element removes it before anything can
+ * animate it away — the same trap as `AnimatePresence` inside the conditional.
+ */
+function MessageDemo({ kind }: { kind: 'error' | 'hint' }) {
+  const [shown, setShown] = useState(true)
+  const [alt, setAlt] = useState(false)
+  const Msg = kind === 'error' ? Form.Error : Form.Hint
+  const first = kind === 'error' ? 'An email address is required.' : 'Lowercase letters, numbers and hyphens.'
+  const second = kind === 'error' ? 'That address is already in use.' : 'Changing this changes the public URL.'
+  return (
+    <div className="w-full">
+      <Form.TextInput error={kind === 'error' && shown} defaultValue="" placeholder="hello@example.com" />
+      <div className="h-1" />
+      {/* Kept mounted; only the children change. */}
+      <Msg>{shown ? (alt ? second : first) : ''}</Msg>
+      <div className="mt-2 flex flex-wrap gap-2">
+        <Ctl onClick={() => setShown((v) => !v)} active={shown}>{shown ? 'Clear it' : 'Show it'}</Ctl>
+        <Ctl onClick={() => setAlt((v) => !v)}>Swap the message</Ctl>
+      </div>
+    </div>
+  )
+}
+
+/** The failure mode, next to the working version: unmount the element and the
+ *  exit never plays, because there is nothing left to animate. */
+function MessageUnmountDemo() {
+  const [shown, setShown] = useState(true)
+  return (
+    <div className="w-full">
+      <Form.TextInput error={shown} defaultValue="" placeholder="hello@example.com" />
+      <div className="h-1" />
+      {shown && <Form.Error>Unmounted instead of emptied.</Form.Error>}
+      <div className="mt-2">
+        <Ctl onClick={() => setShown((v) => !v)} active={shown}>{shown ? 'Clear it' : 'Show it'}</Ctl>
+      </div>
+    </div>
+  )
+}
+
 export const formEntry: DocEntry = {
   id: 'form',
   name: 'Form',
@@ -85,6 +141,9 @@ export const formEntry: DocEntry = {
     },
   ],
   notes: [
+    'Form.Error and Form.Hint animate on the collapse variant — height: auto plus a fade, so a message arriving does not jump the field below it. A *changed* message re-animates too: the element is keyed on its text, so swapping the string plays an exit and an enter rather than silently substituting the words.',
+    'The exit only plays if the caller keeps the component mounted and empties its children. `{error && <Form.Error>{error}</Form.Error>}` removes the element before anything can animate it away; `<Form.Error>{error}</Form.Error>` with an empty string is the shape that leaves. Both specimens are below, side by side.',
+    'Form.Error animates on mount, Form.Hint does not. An error is something that *arrives*, so it earns an entrance wherever it turns up; a hint is usually printed with the field, and eight hints unfolding on page load is a form that looks like it is still loading.',
     'Form.Select forwards only value, onChange, disabled, aria-label and title to the Dropdown — id, name and required are dropped. That means no native validation and no <Label htmlFor> association. If you need either, use a native select for now.',
     'Form.Checkbox takes a string label and no indeterminate state. AM Campaigns keeps a local checkbox for its select-all header for exactly that reason.',
     'Form.Label uses font-display. If an app has not mapped --font-display the utility is simply never emitted and labels fall back to the body font — no error, just a quiet difference.',
@@ -156,10 +215,14 @@ export const formEntry: DocEntry = {
     },
     {
       title: 'Hint, Error and InputGroup',
+      note: 'The two messages animate in and out on the collapse variant. Press the buttons — the point is that the field below does not jump, and that a changed message replays rather than swapping words in place.',
       cols: 2,
       items: [
         { label: 'Form.Hint', node: <div className="w-full"><Form.TextInput placeholder="my-page" /><div className="h-1" /><Form.Hint>Lowercase letters, numbers and hyphens.</Form.Hint></div> },
         { label: 'Form.Error', note: 'role="alert", so it is announced when it appears.', node: <div className="w-full"><Form.TextInput error defaultValue="" /><div className="h-1" /><Form.Error>An email address is required.</Form.Error></div> },
+        { label: 'Form.Error — live, emptied not unmounted', note: 'The shape that animates both ways. “Swap the message” shows the keyed re-entrance.', node: <MessageDemo kind="error" /> },
+        { label: 'Form.Hint — live', note: 'Same collapse, but no entrance on first paint: a hint is printed with the field, not delivered to it.', node: <MessageDemo kind="hint" /> },
+        { label: 'the exit that never plays', note: '{error && <Form.Error>…</Form.Error>} — unmounting removes the element before it can animate away. Compare it with the specimen two cells up.', node: <MessageUnmountDemo /> },
         { label: 'startAddon', node: <div className="w-full"><Form.InputGroup startAddon="https://"><Form.TextInput placeholder="example.com" className="rounded-l-none" /></Form.InputGroup></div> },
         { label: 'endAddon', node: <div className="w-full"><Form.InputGroup endAddon=".myshop.com"><Form.TextInput placeholder="store" className="rounded-r-none" /></Form.InputGroup></div> },
       ],
@@ -216,6 +279,7 @@ export const dropdownEntry: DocEntry = {
     },
   ],
   notes: [
+    'The listbox opens and closes on the pop variant — the same gesture as Menu and Popover, at a different size. transformOrigin sits at the top-left, so it grows out of the field rather than out of nothing.',
     'The listbox is portalled to document.body with position: fixed, so it is never clipped by a scrollable ancestor, and it flips above the trigger when there is not room below. Scroll the page with one open to see it track.',
     'Keyboard: ArrowDown/ArrowUp/Enter/Space open and move; Escape closes and returns focus to the trigger. The selected option carries aria-selected.',
     'It does not forward id, name or required — so no native form validation and no <Label htmlFor> association.',

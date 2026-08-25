@@ -247,6 +247,8 @@ export const tokensEntry: DocEntry = {
     'The on-* roles are not decoration. on-ok is white in the CMS light theme and near-black in its dark theme, because the same green does not carry white text in both. A component writing text-white on bg-ok is AA in exactly one of them.',
     'Both apps declare their palettes with @theme inline, which substitutes values into utilities instead of emitting --color-* properties. That is why findMissingTokens needs the app’s own role → variable map rather than guessing a name.',
     'Adding a tier-1 token is a breaking change for both apps: define it in both stylesheets before any component uses it.',
+    'TIER2_ANIMATIONS is now a historical export rather than a prerequisite. No library primitive emits animate-fade-in, animate-slide-in or animate-pop-in any more — the overlays animate through Motion, which needs no token and no keyframe. Both apps still use the utilities in their own components, so the export stays.',
+    'The same is true of --animate-shimmer, which never made it into the contract at all: Skeleton’s wave variant emitted a class no repo ever declared. It is driven by Motion now and works everywhere.',
   ],
   states: [
     {
@@ -257,20 +259,34 @@ export const tokensEntry: DocEntry = {
     },
     {
       title: 'Tier 2 — optional, per primitive',
-      note: 'Which app actually declares each one today. “Not yet” means the primitives needing it would render wrong there — the CMS does not use Pill, Modal, Drawer or Popover, so nothing is broken, but adopting one means adding the token first.',
+      note: 'Which app actually declares each one today. “Not yet” means the primitives needing it would render wrong there — the CMS does not use Pill, Modal, Drawer or Popover, so nothing is broken, but adopting one means adding the token first. Note the list is shorter than it used to be: the three animate-* utilities are no longer among the prerequisites.',
       cols: 1,
       items: [
         { label: 'declaration status', wide: true, raw: true, node: <Tier2Table /> },
         {
-          label: 'required animations',
-          note: 'Needed by Modal, Drawer and Popover. Both a keyframe and (in Tailwind v4) an --animate-* entry, or the keyframe is pruned from the build.',
+          label: 'TIER2_ANIMATIONS — no longer required by any primitive',
+          note: 'These used to be prerequisites for Modal, Drawer and Popover. Those three are driven by Motion now, so no library component emits an animate-* class and no app has to declare a keyframe for one. The export stays because both apps still use the utilities in their own components, and removing an export is a breaking change (§C.6).',
           wide: true,
           raw: true,
           node: (
-            <div className="flex flex-wrap gap-2 font-mono text-[11.5px]">
-              {TIER2_ANIMATIONS.map((a) => (
-                <span key={a} className="rounded bg-zinc-800 px-2 py-1 text-zinc-300">{a}</span>
-              ))}
+            <div className="w-full">
+              <div className="flex flex-wrap gap-2 font-mono text-[11.5px]">
+                {TIER2_ANIMATIONS.map((a) => (
+                  <span key={a} className="rounded bg-zinc-800 px-2 py-1 text-zinc-500 line-through">{a}</span>
+                ))}
+              </div>
+              <p className="mt-2 max-w-2xl text-[11.5px] leading-relaxed text-zinc-400">
+                They had to go rather than merely being joined by the JS. The CMS never declared any
+                of them — <code className="font-mono text-zinc-300">globals.css</code> has exactly one{' '}
+                <code className="font-mono text-zinc-300">--animate-*</code> entry and it is{' '}
+                <code className="font-mono text-zinc-300">--animate-marquee</code> — so those overlays
+                rendered there with no enter animation at all, silently, for as long as they existed.
+                And AM Campaigns declares them with{' '}
+                <code className="font-mono text-zinc-300">animation-fill-mode: both</code>: a CSS
+                animation outranks inline style, and <code className="font-mono text-zinc-300">both</code>{' '}
+                retains the final keyframe forever, which pins opacity at 1 and makes every Motion exit
+                invisible. See the Motion page.
+              </p>
             </div>
           ),
         },

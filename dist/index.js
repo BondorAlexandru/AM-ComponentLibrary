@@ -14,6 +14,10 @@ export { AmUiProvider, DefaultSpinner, Spinner, useAmUi, useComponentTheme, } fr
 // The `asChild` implementation, exported so an app can build its own polymorphic
 // component on the same merge rules.
 export { Slot } from './lib/Slot.js';
+// The motion layer — the scale, the shared variants, and the four primitives
+// that CSS cannot express (scroll reveal, height collapse, stagger, counting).
+// Also available as `@am/ui/motion` on its own.
+export { EASE, EASE_IN_OUT, DURATION, SPRING, STAGGER, VIEWPORT, tween, fade, rise, pop, popCentered, slideFrom, staggerList, riseItem, collapse, AmUiMotionConfig, Reveal, Collapse, Stagger, StaggerItem, AnimatedNumber, useMotionEnabled, useVariants, instantVariants, } from './motion/index.js';
 // The geometry scale. Every value is a CSS var with today's rendering as its
 // fallback, so defining one restyles the library and defining none changes nothing.
 export { H, R, T, GEOMETRY_TOKENS } from './tokens/geometry.js';

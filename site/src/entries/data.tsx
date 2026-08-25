@@ -16,6 +16,136 @@ import {
 } from '@am/ui'
 import type { DocEntry } from '../types.ts'
 
+/**
+ * Every figure on this page animates: the gauge sweeps, the bars grow, the
+ * numbers count. All of it is invisible in a screenshot and most of it is
+ * invisible the second time you look at a static specimen, so the demos below
+ * all carry a control that changes the value.
+ */
+
+/** Docs-chrome control — zinc, never a token role, so it survives all three canvases. */
+function Ctl({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className="rounded bg-zinc-800 px-2 py-1 text-[11.5px] font-medium text-zinc-200 hover:bg-zinc-700"
+    >
+      {children}
+    </button>
+  )
+}
+
+const rand = (min: number, max: number) => Math.round(min + Math.random() * (max - min))
+
+function LiveStats() {
+  const [v, setV] = useState({ impressions: 128400, reach: 94100, engagements: 8200, run: 0 })
+  return (
+    <div className="w-full">
+      <div className="mb-3 flex flex-wrap gap-2">
+        <Ctl onClick={() => setV((s) => ({ impressions: rand(20000, 300000), reach: rand(10000, 200000), engagements: rand(500, 40000), run: s.run }))}>
+          New figures
+        </Ctl>
+        <Ctl onClick={() => setV((s) => ({ ...s, run: s.run + 1 }))}>Replay from zero</Ctl>
+      </div>
+      <div className="bg-surface border-hairline grid w-full grid-cols-2 gap-4 rounded-[12px] border p-4 sm:grid-cols-3">
+        <Stat key={`a${v.run}`} label="Impressions" value={v.impressions} delta={12} />
+        <Stat key={`b${v.run}`} label="Reach" value={v.reach} delta={4} />
+        <Stat key={`c${v.run}`} label="Engagements" value={v.engagements} delta={-3} />
+      </div>
+      <p className="text-ink-3 mt-2 text-[11.5px]">
+        Press “New figures” twice: the first count runs from zero, the rest tick from wherever the
+        number already is.
+      </p>
+    </div>
+  )
+}
+
+function LiveKpis() {
+  const [v, setV] = useState({ sessions: 12400, views: 48900, run: 0 })
+  return (
+    <div className="w-full">
+      <div className="mb-3 flex flex-wrap gap-2">
+        <Ctl onClick={() => setV((s) => ({ sessions: rand(1000, 40000), views: rand(5000, 120000), run: s.run }))}>New figures</Ctl>
+        <Ctl onClick={() => setV((s) => ({ ...s, run: s.run + 1 }))}>Replay from zero</Ctl>
+      </div>
+      <div className="grid w-full grid-cols-2 gap-3">
+        <KpiCard key={`k${v.run}`} label="Sessions" value={v.sessions} delta={8} />
+        <KpiCard key={`p${v.run}`} label="Page views" value={v.views} delta={12} />
+      </div>
+      <p className="text-ink-3 mt-2 text-[11.5px]">
+        Only whole numbers count up — an interpolated 2.4 would round to a different string than the
+        one you passed, and a figure that changes because you animated it is worse than one that
+        does not move.
+      </p>
+    </div>
+  )
+}
+
+function LiveGauge() {
+  const [score, setScore] = useState<number | null>(96)
+  return (
+    <div className="w-full">
+      <div className="mb-3 flex flex-wrap gap-2">
+        <Ctl onClick={() => setScore(rand(0, 100))}>New score</Ctl>
+        <Ctl onClick={() => setScore(0)}>0</Ctl>
+        <Ctl onClick={() => setScore(100)}>100</Ctl>
+        <Ctl onClick={() => setScore(null)}>null</Ctl>
+      </div>
+      <div className="flex items-center gap-6">
+        <ScoreGauge score={score} label={score === null ? 'Not run' : 'SEO health'} size={110} />
+        <p className="text-ink-3 max-w-[22ch] text-[11.5px] leading-relaxed">
+          The arc sweeps from where it was to where it is, on the slower duration — this is the one
+          figure on an SEO page anyone actually waits to read. The number inside counts with it.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function LiveProgress() {
+  const [v, setV] = useState(62)
+  return (
+    <div className="w-full">
+      <div className="mb-3 flex flex-wrap gap-2">
+        <Ctl onClick={() => setV(rand(0, 100))}>New value</Ctl>
+        <Ctl onClick={() => setV(0)}>0%</Ctl>
+        <Ctl onClick={() => setV(100)}>100%</Ctl>
+      </div>
+      <div className="flex w-full flex-col gap-3">
+        <ProgressBar value={v} label="Storage used" showValue />
+        <ProgressBar value={v} tone={v > 90 ? 'danger' : v > 70 ? 'warn' : 'ok'} label="Quota" showValue size="lg" />
+      </div>
+      <p className="text-ink-3 mt-2 text-[11.5px]">
+        The fill animates its width rather than scaleX — a scaled fill would squash its own pill
+        radius on the way out. BarList does the opposite, and for a reason: see its page.
+      </p>
+    </div>
+  )
+}
+
+function LiveBarList() {
+  const [run, setRun] = useState(0)
+  const [rows, setRows] = useState(TOP_PAGES)
+  return (
+    <div className="w-full">
+      <div className="mb-3 flex flex-wrap gap-2">
+        <Ctl onClick={() => setRun((r) => r + 1)}>Replay the grow</Ctl>
+        <Ctl onClick={() => { setRows(TOP_PAGES.map((r) => ({ ...r, count: rand(200, 14000) }))); setRun((r) => r + 1) }}>
+          New counts
+        </Ctl>
+      </div>
+      <div className="w-full max-w-md">
+        <BarList key={run} title="Top pages" rows={rows} />
+      </div>
+      <p className="text-ink-3 mt-2 text-[11.5px]">
+        Each bar grows on scaleX from its left edge, stepped by the stagger, so the ranking reads
+        top-down rather than arriving all at once. The settled percentage stays in the inline width —
+        scaleX is what moves, which is what keeps the frozen-class assertion honest.
+      </p>
+    </div>
+  )
+}
+
 export const statEntry: DocEntry = {
   id: 'stat',
   name: 'Stat & KpiCard',
@@ -53,11 +183,35 @@ export const statEntry: DocEntry = {
     },
   ],
   notes: [
+    'Whole-number values count up. A fraction does not: AnimatedNumber interpolates and rounds, so 12.5 would land on "13" — a figure that changes because you animated it is worse than one that does not animate at all. Strings pass through untouched, which is why "128.4k" and "£4,120" sit still.',
+    'The count is not gated on the viewport (countOnView={false}). A KPI tile has to reach its real value even where nothing reports visibility — a headless render, a stubbed observer, a tile inside a modal — and "counted up early, off screen" is a far cheaper failure than "shows zero forever".',
+    'The running number is written straight to the DOM node by a motion value, so a dashboard of these costs one render rather than sixty per second per tile.',
     'AM Campaigns had written this tile four times — PerformancePanel’s Metric, CreatorDrawer’s Stat, and two different Kpi components — differing only in font size. `Stat`’s size prop is that difference, made explicit.',
     'Delta treats down as danger and up as ok. That is wrong for a metric where down is good (cost, bounce rate, time-to-publish) — invert the number at the call site rather than reading the colour as neutral.',
     'KpiCard uses `font-display`, so an app that has not mapped that token gets the body font. Nothing breaks; the eyebrow just looks less distinct.',
   ],
   states: [
+    {
+      title: 'Counting up, live',
+      note: 'The figures animate. Press the buttons more than once — the first arrival counts from zero, every later change ticks from wherever the number currently is, which is what makes a live dashboard readable rather than flickery.',
+      cols: 1,
+      items: [
+        { label: 'Stat — a grid of live figures', wide: true, node: <LiveStats /> },
+        { label: 'KpiCard — same behaviour, its own card', wide: true, node: <LiveKpis /> },
+        {
+          label: 'numbers vs strings',
+          note: 'Left counts, right does not. Only integers are animated; anything pre-formatted is rendered exactly as given.',
+          wide: true,
+          node: (
+            <div className="flex w-full flex-wrap gap-8">
+              <Stat label="Impressions (number)" value={128400} size="lg" />
+              <Stat label="Impressions (string)" value="128.4k" size="lg" />
+              <Stat label="Fraction (2.4)" value={2.4} size="lg" />
+            </div>
+          ),
+        },
+      ],
+    },
     {
       title: 'Stat — sizes',
       cols: 3,
@@ -147,12 +301,19 @@ export const barsEntry: DocEntry = {
     },
   ],
   notes: [
+    'The ProgressBar fill animates its width from 0 on mount, and from its old value to its new one on every change, at the slow duration. Width rather than scaleX here — unlike BarList — because a scaled fill would squash its own pill radius on the way out.',
     'The width is an inline style, not a class, and has to be: Tailwind cannot emit a rule for a runtime percentage, so `w-[${pct}%]` produces nothing at all (§C.3).',
     'A segment carries its own colour class rather than a variant, for the same reason Pill does — a domain set (campaign stages, content types) has more states than a union should hold.',
     'A segment is only focusable and clickable when it has an onClick. Without one it renders disabled, so keyboard users do not tab through a decorative chart.',
     'Zero-value segments are skipped entirely rather than rendered at 0% width, which would otherwise show as a hairline sliver.',
   ],
   states: [
+    {
+      title: 'ProgressBar — animating to a new value',
+      note: 'Change the value repeatedly. The fill travels from where it was, so a bar that updates on a poll reads as a measurement moving rather than a bar being repainted.',
+      cols: 1,
+      items: [{ label: 'live', wide: true, node: <LiveProgress /> }],
+    },
     {
       title: 'ProgressBar — values',
       cols: 3,
@@ -271,10 +432,18 @@ export const barListEntry: DocEntry = {
     },
   ],
   notes: [
+    'The bars grow on scaleX from their left edge, stepped by the stagger so the ranking reads top-down. scaleX rather than width, unlike ProgressBar: the settled percentage has to stay in the inline width attribute, because that is what a caller — and the frozen-class test — reads to know how big the bar actually is.',
+    'The grow runs on mount only. A BarList whose rows change in place will not replay it; remount it with a key if you want the new ranking to animate in.',
     'Counts are run through formatNumber, so 12_400 reads as “12k”. Above 10k the decimal is dropped — see the formatters below.',
     'It does not sort. Pass rows in the order you want them, because the “top” in “top pages” is usually decided by the query, not the component.',
   ],
   states: [
+    {
+      title: 'The bars growing',
+      note: 'On mount each bar scales out from its left edge, one stagger step behind the row above it. Press “Replay the grow” — this is the whole reason the list reads as a ranking rather than as five bars appearing at once.',
+      cols: 1,
+      items: [{ label: 'live', wide: true, node: <LiveBarList /> }],
+    },
     {
       title: 'States',
       cols: 2,
@@ -313,9 +482,17 @@ export const gaugeEntry: DocEntry = {
   ],
   notes: [
     'The CMS original painted the arc with inline var(--sb-ok) and friends — its own variable names, which resolve to nothing in AM Campaigns. The library version uses stroke-* utilities instead: same colour, and no app-specific token in a shared component (§C.2).',
+    'The arc sweeps. It is drawn by hiding the whole dash and revealing score% of it, at the slower duration (0.6s) — the one figure on an SEO page anyone actually waits to read. Changing the score animates from the old arc to the new one rather than from zero.',
+    'The number in the middle counts with the arc, but only because it is a whole number: ScoreGauge rounds before rendering it. score={null} shows an em-dash and never counts.',
     'score={null} is deliberately distinct from score={0}. Rendering a missing measurement as zero tells the user they failed at something they have not run yet.',
   ],
   states: [
+    {
+      title: 'The sweep',
+      note: 'Change the score and watch the arc travel between grades — including the colour change at the 50 and 90 boundaries, which is instant while the arc itself is not.',
+      cols: 1,
+      items: [{ label: 'live', wide: true, node: <LiveGauge /> }],
+    },
     {
       title: 'Grades',
       cols: 4,

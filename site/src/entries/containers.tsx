@@ -203,12 +203,14 @@ export const skeletonEntry: DocEntry = {
         { name: 'width', type: 'string | number', default: "'100%'", note: 'A number is treated as px.' },
         { name: 'height', type: 'string | number', default: "'1rem'", note: 'A number is treated as px.' },
         { name: 'variant', type: "'text' | 'circular' | 'rectangular'", default: "'rectangular'", note: 'Only the border radius changes: rounded / rounded-full / rounded-md.' },
-        { name: 'animation', type: "'pulse' | 'wave' | 'none'", default: "'pulse'", note: 'See the note below — wave does not currently animate in either app.' },
+        { name: 'animation', type: "'pulse' | 'wave' | 'none'", default: "'pulse'", note: 'pulse breathes on opacity (Tailwind’s built-in animate-pulse); wave sweeps a gradient across the bar. Use wave for a large block where a pulse reads as flicker, none inside a list of twenty.' },
       ],
     },
   ],
   notes: [
-    'animation="wave" is inert. It needs an --animate-shimmer entry in the consuming app’s @theme, and neither app defines one, so wave renders as a static bar. It is preserved rather than fixed because changing it would change the CMS.',
+    'animation="wave" works now. It used to emit an animate-shimmer class that needed an --animate-shimmer entry in the consuming app’s @theme — which neither app ever declared, so it shipped as a dead static bar in both. The sweep is driven from Motion instead: same gradient classes, no token to define, identical in both apps.',
+    'The shimmer loop is deliberately slower than anything on the motion scale (2 × DURATION.slower) and linear-eased. A shimmer is ambient; at a UI duration it reads as an error state blinking at you, and any ease leaves a visible stall at the loop point.',
+    'pulse is the only one of the three that is pure CSS. With theme.motion.enabled: false, wave falls back to the static gradient bar and pulse keeps breathing — animate-pulse is a Tailwind utility and the flag does not reach it.',
   ],
   states: [
     {
@@ -222,11 +224,34 @@ export const skeletonEntry: DocEntry = {
     },
     {
       title: 'Animations',
+      note: 'All three side by side, moving. pulse breathes on opacity; wave sweeps a gradient left to right on a loop; none sits still. Check wave in the CMS dark theme too — the sweep is input → hairline → input, so its contrast comes from the palette, not from a fixed white.',
       cols: 3,
       items: [
-        { label: "animation='pulse'", note: 'The default — opacity breathes.', node: <div className="w-full"><Skeleton animation="pulse" height={32} /></div> },
-        { label: "animation='wave'", note: 'Currently static — see the note above.', node: <div className="w-full"><Skeleton animation="wave" height={32} /></div> },
+        { label: "animation='pulse'", note: 'The default — opacity breathes. Tailwind’s built-in animate-pulse, no token and no JS.', node: <div className="w-full"><Skeleton animation="pulse" height={32} /></div> },
+        { label: "animation='wave'", note: 'A gradient sweep, driven by Motion. Needs no token — this is the variant that used to be inert.', node: <div className="w-full"><Skeleton animation="wave" height={32} /></div> },
         { label: "animation='none'", node: <div className="w-full"><Skeleton animation="none" height={32} /></div> },
+        { label: 'pulse vs wave, same size', note: 'The comparison the choice actually turns on: on a large block pulse reads as flicker and wave reads as loading.', wide: true, node: (
+          <div className="flex w-full flex-col gap-3">
+            <div className="flex items-center gap-3"><span className="text-ink-3 w-14 shrink-0 font-mono text-[11px]">pulse</span><Skeleton animation="pulse" height={56} /></div>
+            <div className="flex items-center gap-3"><span className="text-ink-3 w-14 shrink-0 font-mono text-[11px]">wave</span><Skeleton animation="wave" height={56} /></div>
+          </div>
+        ) },
+        { label: 'wave on a card-shaped placeholder', wide: true, node: (
+          <div className="w-full max-w-sm">
+            <Card>
+              <div className="flex items-center gap-3">
+                <Skeleton animation="wave" variant="circular" width={40} height={40} />
+                <div className="flex-1">
+                  <Skeleton animation="wave" variant="text" width="60%" />
+                  <div className="h-1.5" />
+                  <Skeleton animation="wave" variant="text" width="35%" height={10} />
+                </div>
+              </div>
+              <div className="h-4" />
+              <Skeleton animation="wave" height={72} />
+            </Card>
+          </div>
+        ) },
       ],
     },
     {

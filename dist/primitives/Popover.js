@@ -11,15 +11,25 @@
  *   parent. Right when the panel holds arbitrary content (labels, separators,
  *   nested controls) and the parent isn't clipping.
  *
- * Requires tier-2 tokens: `--radius-card`, `--shadow-raised`, `animate-pop-in`.
+ * Requires tier-2 tokens: `--radius-card` and `--shadow-raised`.
+ *
+ * The panel used to carry `animate-pop-in`; it is now animated in *and* out by
+ * Motion. The class had to be dropped rather than kept alongside: the CMS never
+ * defined that keyframe, and AM Campaigns declares it `animation-fill-mode:
+ * both`, which outranks inline style and would pin the panel opaque for the
+ * whole of the exit. See the header of `Overlay.tsx`.
  */
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '../lib/cn.js';
+import { pop } from '../motion/variants.js';
+import { useVariants } from '../motion/components.js';
 /** Lightweight popover — click to open, click-away or Escape to close. */
 export function Popover({ trigger, children, align = 'left', width = 'w-56', className, }) {
     const [open, setOpen] = useState(false);
+    const panelVariants = useVariants(pop);
     const ref = useRef(null);
     useEffect(() => {
         if (!open)
@@ -36,7 +46,7 @@ export function Popover({ trigger, children, align = 'left', width = 'w-56', cla
             document.removeEventListener('keydown', onKey);
         };
     }, [open]);
-    return (_jsxs("div", { ref: ref, className: cn('relative', className), children: [trigger({ open, toggle: () => setOpen((o) => !o) }), open && (_jsx("div", { className: cn('animate-pop-in bg-surface border-hairline absolute z-40 mt-2 overflow-hidden rounded-card border p-1.5 shadow-raised', align === 'right' ? 'right-0' : 'left-0', width), children: children(() => setOpen(false)) }))] }));
+    return (_jsxs("div", { ref: ref, className: cn('relative', className), children: [trigger({ open, toggle: () => setOpen((o) => !o) }), _jsx(AnimatePresence, { children: open && (_jsx(motion.div, { className: cn('bg-surface border-hairline absolute z-40 mt-2 overflow-hidden rounded-card border p-1.5 shadow-raised', align === 'right' ? 'right-0' : 'left-0', width), variants: panelVariants, initial: "hidden", animate: "show", exit: "exit", style: { transformOrigin: align === 'right' ? 'top right' : 'top left' }, children: children(() => setOpen(false)) }, "panel")) })] }));
 }
 export function MenuItem({ children, onClick, icon, danger, active, }) {
     return (_jsxs("button", { onClick: onClick, className: cn('flex w-full items-center gap-2.5 rounded-[var(--am-radius-control,8px)] px-2.5 py-[7px] text-left text-[13px] transition-colors', danger ? 'text-accent-text hover:bg-accent-soft' : 'text-ink-2 hover:bg-input hover:text-ink', active && 'bg-input text-ink font-medium'), children: [icon && _jsx("span", { className: "shrink-0 opacity-70", children: icon }), _jsx("span", { className: "min-w-0 flex-1 truncate", children: children })] }));

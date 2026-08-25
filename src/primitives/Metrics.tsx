@@ -11,10 +11,44 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { motion } from 'motion/react'
 import { Card } from './Card.js'
 import { cn } from '../lib/cn.js'
 import { formatNumber } from '../lib/format.js'
 import { ArrowDownRight, ArrowUpRight, Minus } from '../icons/index.js'
+import { DURATION, EASE, STAGGER, tween } from '../motion/tokens.js'
+import { AnimatedNumber, useMotionEnabled } from '../motion/components.js'
+
+/**
+ * Count a figure up only when it is a whole number.
+ *
+ * `AnimatedNumber` interpolates and rounds, so a fraction would land on a
+ * different string than the one the caller passed — 12.5 arriving as "13".
+ * A figure that changes when you animate it is worse than one that does not
+ * animate at all, so anything else is rendered exactly as given.
+ */
+function Figure({ value }: { value: ReactNode }) {
+  if (typeof value !== 'number' || !Number.isInteger(value)) return <>{value}</>
+  // `AnimatedNumber` calls `useInView` unconditionally, and Motion's `inView`
+  // constructs an `IntersectionObserver` with no feature check. `Reveal` is a
+  // motion primitive and may fairly demand one; a metric tile is not, and an
+  // app should not have to stub a browser API to render a number.
+  if (typeof IntersectionObserver === 'undefined') return <>{value}</>
+  return (
+    <AnimatedNumber
+      value={value}
+      // `String` rather than the default `toLocaleString`: the CMS never
+      // grouped these, and separators here would be a design change nobody
+      // asked for.
+      format={(v) => String(Math.round(v))}
+      // Not on view. A KPI tile has to reach its real value even where nothing
+      // ever reports visibility — a stubbed observer under test, a headless
+      // render — and "counted up early, off screen" is a far cheaper failure
+      // than "shows zero forever".
+      countOnView={false}
+    />
+  )
+}
 
 /** A row in a `BarList` — the shape the CMS's analytics layer already returns. */
 export interface CountRow {
@@ -50,7 +84,7 @@ export function KpiCard({
     <Card padding="none" className="flex flex-col gap-2 pt-4 pb-[15px] px-[18px]">
       <span className="font-display text-[12px] tracking-[1.4px] uppercase text-ink-3">{label}</span>
       <div className="flex items-end gap-2">
-        <span className="font-display text-[27px] leading-none text-ink">{value}</span>
+        <span className="font-display text-[27px] leading-none text-ink"><Figure value={value} /></span>
         {delta !== undefined && <span className="mb-0.5"><Delta value={delta} /></span>}
         {hint && <span className="mb-0.5 text-xs text-ink-2 leading-none">{hint}</span>}
       </div>
@@ -89,7 +123,9 @@ export function Stat({
   return (
     <div className={cn('min-w-0', className)}>
       <p className="text-ink-3 truncate text-[11px]">{label}</p>
-      <p className={cn('text-ink mt-0.5 leading-none font-bold tabular-nums', valueSize)}>{value}</p>
+      <p className={cn('text-ink mt-0.5 leading-none font-bold tabular-nums', valueSize)}>
+        <Figure value={value} />
+      </p>
       {(hint || delta !== undefined) && (
         <div className="mt-1 flex items-center gap-1.5">
           {delta !== undefined && <Delta value={delta} />}
@@ -115,6 +151,7 @@ export function BarList({
   hrefBase?: (label: string) => string | undefined
 }) {
   const max = rows.reduce((m, r) => Math.max(m, r.count), 0) || 1
+  const enabled = useMotionEnabled()
   return (
     <Card padding="md">
       <h3 className="font-display text-[12px] tracking-[1.4px] uppercase text-ink-3 mb-4">{title}</h3>
@@ -127,9 +164,16 @@ export function BarList({
             const href = hrefBase?.(r.label)
             const content = (
               <div className="relative flex items-center justify-between px-2 py-1.5 rounded-lg overflow-hidden group">
-                <div
-                  className="absolute inset-y-0 left-0 bg-accent-soft group-hover:opacity-80 transition-opacity rounded-lg"
+                {/* The fill grows on `scaleX`, not on `width`: the width has to
+                    stay the settled percentage in the style attribute, because
+                    that inline value is what a caller (and the frozen test)
+                    reads to know how big the bar actually is. */}
+                <motion.div
+                  className="absolute inset-y-0 left-0 bg-accent-soft group-hover:opacity-80 transition-opacity rounded-lg origin-left"
                   style={{ width: `${(r.count / max) * 100}%` }}
+                  initial={enabled ? { scaleX: 0 } : false}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: DURATION.slow, ease: EASE, delay: i * STAGGER }}
                   aria-hidden
                 />
                 <span className="relative truncate text-sm text-ink-2 pr-2" title={label}>
@@ -181,12 +225,17 @@ export function ScoreGauge({
   const offset = circumference * (1 - v / 100)
   const arc =
     score === null ? 'stroke-ink-3' : v >= 90 ? 'stroke-ok' : v >= 50 ? 'stroke-warn' : 'stroke-danger-accent'
+  const enabled = useMotionEnabled()
   return (
     <div className="flex flex-col items-center">
       <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90" role="img" aria-label={label ?? `Score ${score ?? 'unavailable'}`}>
           <circle cx={size / 2} cy={size / 2} r={radius} fill="none" className="stroke-input" strokeWidth={stroke} />
-          <circle
+          {/* The arc is drawn by hiding all of it and then revealing `v`% of
+              the dash — so the score sweeps round from zero rather than
+              appearing already finished. `slower` because this is the one
+              figure on an SEO page anyone actually waits to read. */}
+          <motion.circle
             cx={size / 2}
             cy={size / 2}
             r={radius}
@@ -194,12 +243,16 @@ export function ScoreGauge({
             className={arc}
             strokeWidth={stroke}
             strokeDasharray={circumference}
-            strokeDashoffset={offset}
+            initial={enabled ? { strokeDashoffset: circumference } : false}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: DURATION.slower, ease: EASE }}
             strokeLinecap="round"
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="font-display text-[30px] leading-none text-ink">{score === null ? "—" : Math.round(v)}</span>
+          <span className="font-display text-[30px] leading-none text-ink">
+            {score === null ? '—' : <Figure value={Math.round(v)} />}
+          </span>
         </div>
       </div>
       {label && <span className="text-sm text-ink-2 mt-1">{label}</span>}
@@ -274,6 +327,7 @@ export function ProgressBar({
 }) {
   const pct = max <= 0 ? 0 : Math.min(100, Math.max(0, (value / max) * 100))
   const fill = { accent: 'bg-accent', ok: 'bg-ok', warn: 'bg-warn', danger: 'bg-danger-accent' }[tone]
+  const enabled = useMotionEnabled()
   return (
     <div className={cn('min-w-0', className)}>
       {(label || showValue) && (
@@ -289,7 +343,15 @@ export function ProgressBar({
         aria-valuemax={100}
         className={cn('bg-input w-full overflow-hidden rounded-pill', BAR_HEIGHT[size])}
       >
-        <div className={cn('h-full rounded-pill transition-[width] duration-300', fill)} style={{ width: `${pct}%` }} />
+        {/* Width rather than `scaleX` here, unlike `BarList`: nothing reads this
+            element's inline width, and a scaled fill would squash its own pill
+            radius on the way out. */}
+        <motion.div
+          className={cn('h-full rounded-pill', fill)}
+          initial={enabled ? { width: 0 } : false}
+          animate={{ width: `${pct}%` }}
+          transition={tween('slow')}
+        />
       </div>
     </div>
   )

@@ -3,7 +3,10 @@
  */
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { motion } from 'motion/react';
 import { cn } from '../lib/cn.js';
+import { SPRING } from '../motion/tokens.js';
+import { useMotionEnabled } from '../motion/components.js';
 export function Card({ children, className = '', padding = 'md', shadow = 'sm', border = true, hover = false, onClick, }) {
     const paddingClasses = {
         none: '',
@@ -17,18 +20,25 @@ export function Card({ children, className = '', padding = 'md', shadow = 'sm', 
         md: 'shadow-[0_2px_10px_rgba(0,0,0,0.16)]',
         lg: 'shadow-[0_18px_50px_rgba(0,0,0,0.28)]',
     };
+    const animate = useMotionEnabled();
+    // Only a card that responds to a click gets to respond to a cursor. Most
+    // cards on a dashboard are containers, and a container that lifts under the
+    // pointer promises an interaction that never arrives.
+    const interactive = hover || !!onClick;
     const borderClass = border ? 'border border-hairline' : '';
     const hoverClass = hover
         ? 'hover:border-line transition-colors cursor-pointer'
         : '';
     const clickableClass = onClick ? 'cursor-pointer' : '';
-    return (_jsx("div", { className: cn(`
+    return (_jsx(motion.div, { className: cn(`
         bg-surface rounded-[var(--am-radius-card,var(--radius-card,12px))]
         ${paddingClasses[padding]}
         ${shadowClasses[shadow]}
         ${borderClass}
         ${hoverClass}
-        ${clickableClass}`, className), onClick: onClick, children: children }));
+        ${clickableClass}`, className), onClick: onClick, ...(animate && interactive
+            ? { whileHover: { y: -2 }, whileTap: { scale: 0.995 }, transition: SPRING.smooth }
+            : null), children: children }));
 }
 export function CardHeader({ title, subtitle, action, className = '' }) {
     return (_jsxs("div", { className: cn(`flex items-start justify-between mb-4`, className), children: [_jsxs("div", { className: "flex-1 min-w-0", children: [_jsx("h3", { className: "text-lg font-semibold tracking-tight text-ink truncate", children: title }), subtitle && (_jsx("p", { className: "text-sm text-ink-2 mt-1 truncate", children: subtitle }))] }), action && _jsx("div", { className: "ml-4 flex-shrink-0", children: action })] }));

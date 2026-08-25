@@ -1,3 +1,4 @@
+import * as React from "react";
 /** True when the URL points at something `<img>` cannot render. */
 export declare function isVideoUrl(url: string | null | undefined): boolean;
 export interface MediaThumbProps {
@@ -15,5 +16,5 @@ export interface MediaThumbProps {
     /** Passed through to the underlying element, for call sites that hide a dead URL. */
     onError?: React.ReactEventHandler<HTMLImageElement | HTMLVideoElement>;
 }
-export declare function MediaThumb({ src, alt, className, style, badge, fallback, onError }: MediaThumbProps): import("react").JSX.Element;
+export declare function MediaThumb({ src, alt, className, style, badge, fallback, onError }: MediaThumbProps): React.JSX.Element;
 //# sourceMappingURL=MediaThumb.d.ts.map

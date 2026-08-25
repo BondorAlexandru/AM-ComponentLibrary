@@ -23,9 +23,11 @@ each rule names the one that backs it.
 
 This file, plus this one-paragraph **architecture at a glance**:
 
-> `@am/ui` is a React 19 component library with three small runtime deps —
+> `@am/ui` is a React 19 component library with four small runtime deps —
 > `clsx`, `tailwind-merge` and `class-variance-authority`, the same set shadcn/ui
-> uses, and each one load-bearing (see §C.14). It is
+> uses, plus `motion` ([motion.dev](https://motion.dev)), which drives every
+> animation in the library (see §C.15 and `docs/MOTION.md`). Each is
+> load-bearing (see §C.14). It is
 > built by **plain `tsc`** (`tsconfig.build.json`) to per-file ESM in `dist/`,
 > which is **committed to the repo** — both consumers install it as a git
 > dependency, so there is no install-time build step to fail on Vercel or
@@ -54,6 +56,7 @@ This file, plus this one-paragraph **architecture at a glance**:
 | adding a component | §C.9 — earn its place in both apps first, then §C.12 — document it |
 | `src/tokens/geometry.ts` | §C.14 — every entry is a literal class string whose fallback is the historical value |
 | `src/theme.tsx`, `src/lib/cn.ts`, `src/lib/Slot.tsx` | §C.14 — the customisation contract and its layer order |
+| `src/motion/**`, any enter/exit or transition | §C.15 — the motion scale and variants. Never a raw duration or cubic-bezier |
 | `site/**` | §C.12 — the docs site; every export needs an entry with visible states |
 | `site/src/registry.ts`, `site/src/entries/**` | §C.12 — the catalogue. `registry.test.ts` fails if an export is undocumented |
 | `site/src/themes.ts` | §C.12 — a mirror of both apps' palettes. Run `npm run check:themes` |
@@ -237,6 +240,28 @@ site `className`. _Backed by: am-ui-reviewer + am-ui-architect._ _Why: the
 alternative to configuration is a fork, and a forked primitive is the exact
 duplication this repo exists to delete._
 
+**C.15 — Animation goes through the motion layer. Never a loose number.**
+Every enter, exit and transition in the library uses Motion and the scale in
+`src/motion/` — five durations, one easing, three springs, eight shared
+variants. A raw `0.3` or `cubic-bezier(…)` in a primitive is a bug: if none of
+the five durations fits, the question to answer first is which one you meant.
+Three specific traps, each of which has already cost a day somewhere:
+- **`AnimatePresence` wraps the conditional, it does not sit inside it.** The
+  `if (!open) return null` pattern early-returns before the element exists, so
+  nothing can animate its exit.
+- **Release side effects on the state change, not on unmount.** An exit keeps
+  the element mounted a few hundred ms after `open` goes false; scroll-lock and
+  focus restore must fire when the state flips or the page is frozen for the
+  length of the animation.
+- **Swap the tag, don't add a wrapper.** `<div>` → `<motion.div>` keeps the
+  element, the classes and the layout; a new wrapper breaks the
+  `firstElementChild` assertions in the frozen-class test and changes layout in
+  ways no class string records.
+Reduced motion is `AmUiMotionConfig`'s job, not a conditional in a component.
+_Backed by: am-ui-reviewer._ _Why: the CSS approach this replaced failed
+silently in production twice — see the "Why not CSS" section of
+`docs/MOTION.md`._
+
 **C.13 — To break a rule, stop and ask.**
 No silent `// eslint-disable`, no `--no-verify`, no `.skip` on a frozen-class
 test, no `covers: []` to dodge §C.12, no "temporarily" hardcoding a colour.
@@ -256,6 +281,9 @@ Both are required. Neither fails loudly.
    ```
 3. **Map the token contract** in the app's `@theme inline` (see `docs/TOKENS.md`).
 4. **Mount `AmUiProvider`** if the app has a brand spinner.
+4b. **Mount `AmUiMotionConfig`** at the app root. One line, no CSS, no tokens —
+   it is what makes every animation in the library and the app honour
+   `prefers-reduced-motion`. See `docs/MOTION.md`.
 5. Next.js only: nothing. `'use client'` is preserved per-file in `dist/`.
 
 ---
@@ -292,12 +320,16 @@ What it is for, beyond a component list:
   class strings and `registry.test.ts` pins docs coverage, but neither catches a
   changed DOM structure or a token an app maps to the wrong value. The site makes
   that reviewable by eye; a screenshot diff over it is the natural next layer.
-- **`Skeleton`'s `wave` animation is dead.** It needs an `--animate-shimmer`
-  entry that neither app defines, so `wave` renders as a static bar. Preserved
-  as-is rather than "fixed", because fixing it would change the CMS (§C.1).
-- **`ConfirmDialog` and `Pill` carry no `'use client'`.** Correct today — both
-  are only ever imported from client components, and the CMS original had none.
-  A future server-component call site would need the directive added.
+- **`Pill` carries no `'use client'`.** Correct today — it is only ever imported
+  from client components, it took on no motion (nothing about a Pill is
+  clickable, so there is no interaction for a hover or tap to acknowledge), and
+  the CMS original had none. A future server-component call site, or giving it
+  an `onClick`, would need the directive added. `ConfirmDialog` **now has one**:
+  it gained `AnimatePresence` for its exit animation.
+- **Two timing scales exist in the CMS.** `app/globals.css` defines
+  `--transition-fast/base/slow` at 150/200/300ms with zero consumers, which now
+  duplicates `DURATION` at different values (120/180/240/360/600ms). Harmless
+  while nothing reads them; a trap the first time someone does.
 - **AM Campaigns still keeps app-level prop adapters** (`Button`'s default
   variant, `EmptyState`'s `body`/`compact` names). Deliberate: it shares the
   implementation without churning ~70 call sites. Converging the prop names is a

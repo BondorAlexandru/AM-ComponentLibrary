@@ -11,13 +11,22 @@
  *   parent. Right when the panel holds arbitrary content (labels, separators,
  *   nested controls) and the parent isn't clipping.
  *
- * Requires tier-2 tokens: `--radius-card`, `--shadow-raised`, `animate-pop-in`.
+ * Requires tier-2 tokens: `--radius-card` and `--shadow-raised`.
+ *
+ * The panel used to carry `animate-pop-in`; it is now animated in *and* out by
+ * Motion. The class had to be dropped rather than kept alongside: the CMS never
+ * defined that keyframe, and AM Campaigns declares it `animation-fill-mode:
+ * both`, which outranks inline style and would pin the panel opaque for the
+ * whole of the exit. See the header of `Overlay.tsx`.
  */
 
 'use client'
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { cn } from '../lib/cn.js'
+import { pop } from '../motion/variants.js'
+import { useVariants } from '../motion/components.js'
 
 /** Lightweight popover — click to open, click-away or Escape to close. */
 export function Popover({
@@ -34,6 +43,7 @@ export function Popover({
   className?: string
 }) {
   const [open, setOpen] = useState(false)
+  const panelVariants = useVariants(pop)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -53,17 +63,25 @@ export function Popover({
   return (
     <div ref={ref} className={cn('relative', className)}>
       {trigger({ open, toggle: () => setOpen((o) => !o) })}
-      {open && (
-        <div
-          className={cn(
-            'animate-pop-in bg-surface border-hairline absolute z-40 mt-2 overflow-hidden rounded-card border p-1.5 shadow-raised',
-            align === 'right' ? 'right-0' : 'left-0',
-            width,
-          )}
-        >
-          {children(() => setOpen(false))}
-        </div>
-      )}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="panel"
+            className={cn(
+              'bg-surface border-hairline absolute z-40 mt-2 overflow-hidden rounded-card border p-1.5 shadow-raised',
+              align === 'right' ? 'right-0' : 'left-0',
+              width,
+            )}
+            variants={panelVariants}
+            initial="hidden"
+            animate="show"
+            exit="exit"
+            style={{ transformOrigin: align === 'right' ? 'top right' : 'top left' }}
+          >
+            {children(() => setOpen(false))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

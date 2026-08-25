@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Badge, SegmentedControl, Stepper, Tabs } from '@am/ui'
+import { AmUiProvider, Badge, SegmentedControl, Stepper, Tabs } from '@am/ui'
 import { BarChart3, FileText, Image, Settings } from '@am/ui/icons'
 import type { DocEntry } from '../types.ts'
 
@@ -53,12 +53,49 @@ export const tabsEntry: DocEntry = {
     },
   ],
   notes: [
+    'Both indicators slide. The underline and the pill are single motion.span elements carrying a layoutId, so switching tabs animates the marker from the old tab to the new one on the snappy spring instead of repainting it. Nothing else moves — the labels only change colour.',
+    'layoutId is built from useId(), so it is unique per instance. Two tab bars sharing one id would animate into each other — clicking in the first would slide the second’s underline across the page to meet it. There is a specimen of two bars side by side below; they ignore each other.',
+    'With motion on, the active tab’s border-b is transparent and the sliding span *is* the underline; the active pill likewise comes from the span rather than a bg-ink class. With theme.motion.enabled: false the classes take over instead, so the marker is in the right place on frame one either way.',
     'The CMS had this underline row written out by hand in four places — app/page.tsx, ProjectDashboardClient, ChatbotAdminClient and ComponentWorkbench — with small drifts. The version with role="tablist"/aria-selected and a focus ring won.',
     'Tabs widens its hit area with a ::before pseudo-element rather than padding, because padding would push the text away from the underline it is supposed to sit on.',
     'Neither implements arrow-key roving focus. They are tablists by role but tab-stops by behaviour, matching what both apps already ship. Worth revisiting before either grows past about six tabs.',
     'SegmentedControl’s active pill is `bg-ink text-canvas` — ink-on-canvas inverts with the theme, so it is near-black on light and near-white on dark. Check it in both.',
   ],
   states: [
+    {
+      title: 'The sliding indicator',
+      note: 'Click between tabs rather than looking at a screenshot: the marker travels. Jump from the first tab to the last to see the full distance, and click fast — a spring picks up an interrupted move from wherever it is, which a tween would not.',
+      cols: 1,
+      items: [
+        { label: 'Tabs — the underline travels', wide: true, node: <div className="w-full"><LiveTabs /></div> },
+        { label: 'SegmentedControl — the pill travels', wide: true, node: <div className="w-full"><LiveSegmented items={TAB_ITEMS.slice(0, 3)} /></div> },
+        {
+          label: 'two bars on one page ignore each other',
+          note: 'The failure layoutId + useId() prevents: with a shared id, clicking in the top row would drag the bottom row’s marker across to meet it. Click in one and watch the other.',
+          wide: true,
+          node: (
+            <div className="flex w-full flex-col gap-5">
+              <LiveTabs aria-label="First bar" />
+              <LiveTabs aria-label="Second bar" />
+              <div className="flex flex-wrap gap-6"><LiveSegmented /><LiveSegmented /></div>
+            </div>
+          ),
+        },
+        {
+          label: 'with motion off',
+          note: 'AmUiProvider theme={{ motion: { enabled: false } }} — the marker jumps rather than sliding, and comes from the class rather than the span. Both land in the same place.',
+          wide: true,
+          node: (
+            <AmUiProvider theme={{ motion: { enabled: false } }}>
+              <div className="flex w-full flex-col gap-5">
+                <LiveTabs aria-label="Motion off" />
+                <LiveSegmented />
+              </div>
+            </AmUiProvider>
+          ),
+        },
+      ],
+    },
     {
       title: 'Tabs',
       cols: 1,

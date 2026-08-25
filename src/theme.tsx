@@ -39,6 +39,22 @@ export interface ComponentConfig<P> {
  */
 import type { ButtonProps, IconButtonProps } from './primitives/Button.js'
 
+/**
+ * App-level motion preferences.
+ *
+ * Deliberately one flag rather than a duration scale or an easing override.
+ * Reduced motion is *not* handled here — mount Motion's own
+ * `<MotionConfig reducedMotion="user">` and it drops transforms while keeping
+ * opacity, per-animation, which is better than anything a boolean can do.
+ *
+ * `enabled: false` is the escape hatch for the case Motion cannot cover: a
+ * test runner or a screenshot harness that needs the final frame on frame one.
+ */
+export interface MotionPreferences {
+  /** Set false to render every library animation at its end state, instantly. */
+  enabled?: boolean
+}
+
 export interface AmUiTheme {
   components?: {
     Button?: ComponentConfig<ButtonProps>
@@ -58,6 +74,8 @@ export interface AmUiTheme {
     Drawer?: ComponentConfig<Record<string, unknown>>
     Popover?: ComponentConfig<Record<string, unknown>>
   }
+  /** See `MotionPreferences`. Omit and the library animates. */
+  motion?: MotionPreferences
 }
 
 export type ComponentName = keyof NonNullable<AmUiTheme['components']>

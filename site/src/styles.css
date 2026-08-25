@@ -33,8 +33,24 @@
   --color-input: var(--am-input);
 }
 
-/* Tier-2 keyframes the Campaigns-origin overlays animate with. Mirrors
-   ../Influencer/src/index.css. */
+/* ─────────────────────────────────────────────────────────────────────────────
+   The three tier-2 `animate-*` utilities, mirrored from ../Influencer/src/index.css.
+
+   Nothing in the library emits these class names any more — Modal, Drawer,
+   Popover, Dropdown and Menu are animated by Motion, and Skeleton's `wave` no
+   longer asks for an `--animate-shimmer` nobody ever declared. They are kept
+   here only so the Tokens page can talk about what an app's stylesheet really
+   contains, and because both apps still use the utilities in their own
+   components.
+
+   Note the `both` fill mode, because it is the reason the library dropped them:
+   a CSS animation outranks inline style, and `both` retains the final keyframe
+   forever — so a finished `animate-fade-in` pins `opacity: 1` and no Motion
+   exit is ever visible. If a specimen on this site ever animates in but refuses
+   to animate out, check first that it has not picked up one of these classes.
+   Nothing does today (`grep -rn 'animate-fade-in\|animate-slide-in\|animate-pop-in' site/src`
+   finds only this block).
+   ──────────────────────────────────────────────────────────────────────────── */
 @keyframes am-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -51,6 +67,11 @@
 .animate-slide-in { animation: am-slide-in-right 0.24s cubic-bezier(0.32, 0.72, 0, 1) both; }
 .animate-pop-in { animation: am-pop-in 0.2s cubic-bezier(0.32, 0.72, 0, 1) both; }
 
+/* Blunt instrument for CSS animations and transitions only — it cannot reach a
+   Motion animation, which is driven from JS and never sets the `animation`
+   property. Motion is handled properly instead: main.tsx mounts
+   `AmUiMotionConfig`, i.e. `<MotionConfig reducedMotion="user">`, which drops
+   transforms and keeps opacity per animation rather than killing all of them. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

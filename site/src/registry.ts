@@ -5,6 +5,7 @@ import { cardEntry, emptyStateEntry, mediaThumbEntry, skeletonEntry } from './en
 import { dropdownEntry, formEntry } from './entries/forms.tsx'
 import { confirmDialogEntry, menuEntry, modalEntry, popoverEntry } from './entries/overlays.tsx'
 import { iconsEntry, spinnerEntry, tokensEntry, utilsEntry } from './entries/foundations.tsx'
+import { motionEntry } from './entries/motion.tsx'
 import { barListEntry, barsEntry, formattersEntry, gaugeEntry, layoutEntry, statEntry } from './entries/data.tsx'
 import { stepperEntry, tabsEntry } from './entries/navigation.tsx'
 import { customisingEntry } from './entries/customising.tsx'
@@ -18,6 +19,7 @@ import { customisingEntry } from './entries/customising.tsx'
  */
 export const ENTRIES: DocEntry[] = [
   tokensEntry,
+  motionEntry,
   customisingEntry,
   utilsEntry,
   spinnerEntry,

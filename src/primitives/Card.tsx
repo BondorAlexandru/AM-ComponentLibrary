@@ -5,7 +5,10 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { motion } from 'motion/react'
 import { cn } from '../lib/cn.js'
+import { SPRING } from '../motion/tokens.js'
+import { useMotionEnabled } from '../motion/components.js'
 
 interface CardProps {
   children: ReactNode
@@ -40,6 +43,12 @@ export function Card({
     lg: 'shadow-[0_18px_50px_rgba(0,0,0,0.28)]',
   }
 
+  const animate = useMotionEnabled()
+  // Only a card that responds to a click gets to respond to a cursor. Most
+  // cards on a dashboard are containers, and a container that lifts under the
+  // pointer promises an interaction that never arrives.
+  const interactive = hover || !!onClick
+
   const borderClass = border ? 'border border-hairline' : ''
   const hoverClass = hover
     ? 'hover:border-line transition-colors cursor-pointer'
@@ -47,7 +56,7 @@ export function Card({
   const clickableClass = onClick ? 'cursor-pointer' : ''
 
   return (
-    <div
+    <motion.div
       className={cn(`
         bg-surface rounded-[var(--am-radius-card,var(--radius-card,12px))]
         ${paddingClasses[padding]}
@@ -56,9 +65,12 @@ export function Card({
         ${hoverClass}
         ${clickableClass}`, className)}
       onClick={onClick}
+      {...(animate && interactive
+        ? { whileHover: { y: -2 }, whileTap: { scale: 0.995 }, transition: SPRING.smooth }
+        : null)}
     >
       {children}
-    </div>
+    </motion.div>
   )
 }
 

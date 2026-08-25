@@ -10,8 +10,9 @@
  */
 export { cn, type ClassValue } from './lib/cn.js';
 export { formatNumber, formatBytes } from './lib/format.js';
-export { AmUiProvider, DefaultSpinner, Spinner, useAmUi, useComponentTheme, type AmUiContextValue, type AmUiTheme, type ComponentConfig, type ComponentName, type SpinnerProps, } from './theme.js';
+export { AmUiProvider, DefaultSpinner, Spinner, useAmUi, useComponentTheme, type AmUiContextValue, type AmUiTheme, type ComponentConfig, type ComponentName, type MotionPreferences, type SpinnerProps, } from './theme.js';
 export { Slot } from './lib/Slot.js';
+export { EASE, EASE_IN_OUT, DURATION, SPRING, STAGGER, VIEWPORT, tween, fade, rise, pop, popCentered, slideFrom, staggerList, riseItem, collapse, AmUiMotionConfig, Reveal, Collapse, Stagger, StaggerItem, AnimatedNumber, useMotionEnabled, useVariants, instantVariants, type DurationName, type SpringName, type RevealProps, type CollapseProps, type StaggerProps, type AnimatedNumberProps, } from './motion/index.js';
 export { H, R, T, GEOMETRY_TOKENS } from './tokens/geometry.js';
 export { Button, IconButton, buttonVariants, iconButtonVariants, type ButtonProps, type IconButtonProps, type ButtonVariants, type IconButtonVariants, } from './primitives/Button.js';
 export { Badge, Tag, Status } from './primitives/Badge.js';

@@ -3,10 +3,11 @@
  * `components/ui/Loading.tsx` so the class strings (and therefore the CMS
  * rendering) are unchanged.
  *
- * Note: the `wave` animation needs an `--animate-shimmer` entry in the
- * consuming app's `@theme`. Neither app defines one today, so `wave` currently
- * degrades to a static bar — preserved as-is rather than silently "fixed",
- * because changing it would change the CMS.
+ * `wave` used to emit `animate-shimmer`, which needed an `--animate-shimmer`
+ * entry in the consuming app's `@theme` that neither app ever defined — so it
+ * rendered as a dead static bar in both. The sweep is driven from Motion now:
+ * same gradient classes, no token required, works everywhere. `pulse` still
+ * uses `animate-pulse`, which is a Tailwind built-in and needs nothing.
  */
 interface SkeletonProps {
     width?: string | number;

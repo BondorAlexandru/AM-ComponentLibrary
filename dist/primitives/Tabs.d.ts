@@ -11,7 +11,7 @@
  *
  * Rule of thumb: underline for navigating a page, pills for filtering a panel.
  */
-import type { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 export interface TabItem<T extends string = string> {
     id: T;
     label: ReactNode;

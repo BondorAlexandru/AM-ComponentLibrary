@@ -10,6 +10,9 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import React, { useState, useRef, useEffect, useCallback, isValidElement, } from 'react';
 import { createPortal } from 'react-dom';
+import { AnimatePresence, motion } from 'motion/react';
+import { pop } from '../motion/variants.js';
+import { useVariants } from '../motion/components.js';
 import { ChevronDown, Check } from '../icons/index.js';
 /** Recursively pull { value, label } out of <option>/<optgroup> children. */
 function optionsFromChildren(children) {
@@ -36,6 +39,7 @@ export function Dropdown({ value, onChange, options, children, placeholder = 'Se
     const opts = options ?? optionsFromChildren(children);
     const selected = opts.find((o) => o.value === value);
     const [open, setOpen] = useState(false);
+    const panelVariants = useVariants(pop);
     const [activeIdx, setActiveIdx] = useState(-1);
     const [coords, setCoords] = useState(null);
     const triggerRef = useRef(null);
@@ -109,22 +113,28 @@ export function Dropdown({ value, onChange, options, children, placeholder = 'Se
                 commit(opts[activeIdx].value);
         }
     };
-    const listbox = open && typeof document !== 'undefined'
-        ? createPortal(_jsx("div", { ref: setMenuNode, role: "listbox", "aria-label": ariaLabel, style: {
-                position: 'fixed',
-                top: coords?.top ?? -9999,
-                left: coords?.left,
-                width: coords?.width,
-                visibility: coords ? 'visible' : 'hidden',
-            }, className: "z-[110] max-h-[280px] overflow-y-auto rounded-[var(--am-radius-panel,10px)] border border-hairline bg-surface p-[6px] shadow-[0_8px_12px_rgba(0,0,0,0.25)] flex flex-col gap-[2px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", children: opts.map((o, i) => {
-                const isSelected = o.value === value;
-                return (_jsxs("button", { type: "button", role: "option", "aria-selected": isSelected, disabled: o.disabled, onClick: () => commit(o.value), onMouseEnter: () => setActiveIdx(i), className: `flex w-full items-center gap-2 rounded-[var(--am-radius-control,8px)] px-[10px] py-[7px] text-left text-[13px] transition-colors disabled:opacity-40 ${isSelected
-                        ? 'bg-accent-soft text-accent-text font-medium'
-                        : i === activeIdx
-                            ? 'bg-input text-ink'
-                            : 'text-ink-2 hover:bg-input hover:text-ink'}`, children: [_jsx("span", { className: "min-w-0 flex-1 truncate", children: o.label }), isSelected && _jsx(Check, { className: "h-3.5 w-3.5 shrink-0" })] }, `${o.value}-${i}`));
-            }) }), document.body)
-        : null;
+    // AnimatePresence must stay mounted across the close for the exit to play, so
+    // the portal is built unconditionally and `document` is guarded explicitly.
+    // The listbox still measures at -9999 behind `visibility: hidden`, and holds
+    // the `hidden` variant until `coords` land so the enter animation starts from
+    // the placed position rather than off-screen.
+    const listbox = typeof document === 'undefined'
+        ? null
+        : createPortal(_jsx(AnimatePresence, { children: open && (_jsx(motion.div, { ref: setMenuNode, role: "listbox", "aria-label": ariaLabel, style: {
+                    position: 'fixed',
+                    top: coords?.top ?? -9999,
+                    left: coords?.left,
+                    width: coords?.width,
+                    visibility: coords ? 'visible' : 'hidden',
+                    transformOrigin: 'top left',
+                }, variants: panelVariants, initial: "hidden", animate: coords ? 'show' : 'hidden', exit: "exit", className: "z-[110] max-h-[280px] overflow-y-auto rounded-[var(--am-radius-panel,10px)] border border-hairline bg-surface p-[6px] shadow-[0_8px_12px_rgba(0,0,0,0.25)] flex flex-col gap-[2px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", children: opts.map((o, i) => {
+                    const isSelected = o.value === value;
+                    return (_jsxs("button", { type: "button", role: "option", "aria-selected": isSelected, disabled: o.disabled, onClick: () => commit(o.value), onMouseEnter: () => setActiveIdx(i), className: `flex w-full items-center gap-2 rounded-[var(--am-radius-control,8px)] px-[10px] py-[7px] text-left text-[13px] transition-colors disabled:opacity-40 ${isSelected
+                            ? 'bg-accent-soft text-accent-text font-medium'
+                            : i === activeIdx
+                                ? 'bg-input text-ink'
+                                : 'text-ink-2 hover:bg-input hover:text-ink'}`, children: [_jsx("span", { className: "min-w-0 flex-1 truncate", children: o.label }), isSelected && _jsx(Check, { className: "h-3.5 w-3.5 shrink-0" })] }, `${o.value}-${i}`));
+                }) }, "listbox")) }), document.body);
     return (_jsxs(_Fragment, { children: [_jsxs("button", { ref: triggerRef, type: "button", disabled: disabled, "aria-haspopup": "listbox", "aria-expanded": open, "aria-label": ariaLabel, title: title, onClick: () => {
                     setOpen((o) => {
                         if (!o) {

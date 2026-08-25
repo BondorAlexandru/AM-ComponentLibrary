@@ -11,7 +11,13 @@
  *   parent. Right when the panel holds arbitrary content (labels, separators,
  *   nested controls) and the parent isn't clipping.
  *
- * Requires tier-2 tokens: `--radius-card`, `--shadow-raised`, `animate-pop-in`.
+ * Requires tier-2 tokens: `--radius-card` and `--shadow-raised`.
+ *
+ * The panel used to carry `animate-pop-in`; it is now animated in *and* out by
+ * Motion. The class had to be dropped rather than kept alongside: the CMS never
+ * defined that keyframe, and AM Campaigns declares it `animation-fill-mode:
+ * both`, which outranks inline style and would pin the panel opaque for the
+ * whole of the exit. See the header of `Overlay.tsx`.
  */
 import { type ReactNode } from 'react';
 /** Lightweight popover — click to open, click-away or Escape to close. */

@@ -10,8 +10,11 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { motion } from 'motion/react'
 import { cn } from '../lib/cn.js'
 import { Check } from '../icons/index.js'
+import { SPRING, tween } from '../motion/tokens.js'
+import { useMotionEnabled } from '../motion/components.js'
 
 export interface Step {
   label: ReactNode
@@ -34,6 +37,7 @@ export function Stepper({
   size?: 'sm' | 'md'
   className?: string
 }) {
+  const enabled = useMotionEnabled()
   return (
     <ol className={cn('flex items-center', className)} aria-label="Progress">
       {steps.map((s, i) => {
@@ -52,15 +56,21 @@ export function Stepper({
               disabled={!canGo}
               className={cn('flex items-center gap-2 text-left', canGo && 'cursor-pointer')}
             >
-              <span
+              {/* The dot swells the moment it becomes the current step — the
+                  one frame where the user needs to know the flow has moved,
+                  and a colour change alone is easy to miss at 24px. */}
+              <motion.span
                 className={cn(
                   'flex shrink-0 items-center justify-center rounded-full font-bold transition-colors',
                   size === 'sm' ? 'h-5 w-5 text-[10.5px]' : 'h-6 w-6 text-[11.5px]',
                   done || active ? 'bg-accent text-on-accent' : 'border-line text-ink-3 border',
                 )}
+                initial={false}
+                animate={{ scale: enabled && active ? 1.08 : 1 }}
+                transition={SPRING.snappy}
               >
                 {done ? <Check size={size === 'sm' ? 11 : 13} /> : i + 1}
-              </span>
+              </motion.span>
               <span className="min-w-0">
                 <span
                   className={cn(
@@ -77,10 +87,20 @@ export function Stepper({
               </span>
             </button>
             {i < steps.length - 1 && (
-              <span
-                aria-hidden
-                className={cn('mx-3 h-px flex-1 transition-colors', done ? 'bg-accent/40' : 'bg-hairline')}
-              />
+              // The completed half is a second line drawn over the track rather
+              // than a colour swap on it, so progress travels the connector in
+              // the direction the user is going instead of blinking on.
+              <span aria-hidden className="bg-hairline relative mx-3 h-px flex-1">
+                <motion.span
+                  className="bg-accent/40 absolute inset-0 origin-left"
+                  initial={false}
+                  animate={{ scaleX: done ? 1 : 0 }}
+                  // Zero is not a duration off the scale — it is `INSTANT`, the
+                  // way `instantVariants` honours `motion.enabled: false`: land
+                  // on the end state in one frame, markup identical.
+                  transition={enabled ? tween('slow') : { duration: 0 }}
+                />
+              </span>
             )}
           </li>
         )

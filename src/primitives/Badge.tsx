@@ -6,7 +6,10 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { motion } from 'motion/react'
 import { cn } from '../lib/cn.js'
+import { SPRING } from '../motion/tokens.js'
+import { useMotionEnabled } from '../motion/components.js'
 
 type BadgeVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'neutral'
 
@@ -60,22 +63,27 @@ interface TagProps {
 }
 
 export function Tag({ children, variant = 'neutral', onRemove, className = '' }: TagProps) {
+  const animate = useMotionEnabled()
   return (
     <span
       className={cn(`inline-flex items-center gap-1.5 rounded-[var(--am-radius-chip,6px)] px-[10px] py-[4px] text-[12px] font-normal ${chipVariant[variant]}`, className)}
     >
       {children}
       {onRemove && (
-        <button
+        // The chip itself stays still — it is a label, not a control. The
+        // remove button is the only part of a Tag anyone can actually press,
+        // and at 12px it needs the feedback more than a full-size button does.
+        <motion.button
           type="button"
           onClick={onRemove}
           className="-mr-1 ml-0.5 rounded-full p-0.5 opacity-70 transition-opacity hover:opacity-100"
           aria-label="Remove tag"
+          {...(animate ? { whileHover: { scale: 1.15 }, whileTap: { scale: 0.85 }, transition: SPRING.snappy } : null)}
         >
           <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
-        </button>
+        </motion.button>
       )}
     </span>
   )

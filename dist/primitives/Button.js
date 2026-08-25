@@ -20,10 +20,22 @@
 import { jsx as _jsx, Fragment as _Fragment, jsxs as _jsxs } from "react/jsx-runtime";
 import * as React from 'react';
 import { cva } from 'class-variance-authority';
+import { motion } from 'motion/react';
 import { cn } from '../lib/cn.js';
 import { Slot } from '../lib/Slot.js';
 import { Spinner, useComponentTheme } from '../theme.js';
 import { H, R, T } from '../tokens/geometry.js';
+import { SPRING } from '../motion/tokens.js';
+import { useMotionEnabled } from '../motion/components.js';
+/**
+ * The press. Nothing on hover — every variant already changes opacity there,
+ * and a button that also grows under the cursor turns a toolbar into a row of
+ * twitching targets. The tap is the one moment the control has to confirm it
+ * received the click, so that is the only moment it moves.
+ */
+const PRESS = { scale: 0.97 };
+/** Smaller box, so the same proportional squeeze needs a bigger number. */
+const PRESS_ICON = { scale: 0.92 };
 /**
  * `primary | secondary | tertiary | danger | success | ghost` are the CMS
  * variants; their treatments are frozen (§C.1). `quiet` and `dark` were added
@@ -55,6 +67,7 @@ export const buttonVariants = cva(cn('inline-flex items-center justify-center ga
 });
 export const Button = React.forwardRef(function Button(inProps, ref) {
     const { props, className: themeClassName } = useComponentTheme('Button', inProps);
+    const animate = useMotionEnabled();
     const { children, variant, size, fullWidth, loading = false, leftIcon, rightIcon, disabled, className, asChild = false, ...rest } = props;
     const classes = cn(buttonVariants({ variant, size, fullWidth }), themeClassName, className);
     const content = (_jsxs(_Fragment, { children: [loading && _jsx(Spinner, { size: 16 }), !loading && leftIcon, children, !loading && rightIcon] }));
@@ -63,7 +76,10 @@ export const Button = React.forwardRef(function Button(inProps, ref) {
     if (asChild) {
         return (_jsx(Slot, { className: classes, ...rest, children: children }));
     }
-    return (_jsx("button", { ref: ref, disabled: disabled || loading, className: classes, ...rest, children: content }));
+    if (!animate) {
+        return (_jsx("button", { ref: ref, disabled: disabled || loading, className: classes, ...rest, children: content }));
+    }
+    return (_jsx(motion.button, { ref: ref, disabled: disabled || loading, className: classes, whileTap: PRESS, transition: SPRING.snappy, ...rest, children: content }));
 });
 export const iconButtonVariants = cva(cn('relative inline-flex items-center justify-center shrink-0', R.control, 'transition-colors duration-150 cursor-pointer', 
 // Widens the hit area past the visible box without changing the layout box.
@@ -86,11 +102,15 @@ export const iconButtonVariants = cva(cn('relative inline-flex items-center just
 });
 export const IconButton = React.forwardRef(function IconButton(inProps, ref) {
     const { props, className: themeClassName } = useComponentTheme('IconButton', inProps);
+    const animate = useMotionEnabled();
     const { icon, variant, size, className, asChild = false, ...rest } = props;
     const classes = cn(iconButtonVariants({ variant, size }), themeClassName, className);
     if (asChild) {
         return (_jsx(Slot, { className: classes, ...rest, children: icon }));
     }
-    return (_jsx("button", { ref: ref, className: classes, ...rest, children: icon }));
+    if (!animate) {
+        return (_jsx("button", { ref: ref, className: classes, ...rest, children: icon }));
+    }
+    return (_jsx(motion.button, { ref: ref, className: classes, whileTap: PRESS_ICON, transition: SPRING.snappy, ...rest, children: icon }));
 });
 //# sourceMappingURL=Button.js.map

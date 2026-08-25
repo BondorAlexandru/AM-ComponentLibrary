@@ -10,8 +10,11 @@
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { forwardRef, useId } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { Dropdown } from './Dropdown.js';
 import { cn } from '../lib/cn.js';
+import { collapse } from '../motion/variants.js';
+import { useVariants } from '../motion/components.js';
 function Field({ children, error, className = '' }) {
     return (_jsx("div", { className: cn(`space-y-1`, className), "data-field-error": error ? 'true' : undefined, children: children }));
 }
@@ -100,11 +103,34 @@ const Radio = forwardRef(({ label, error, className = '', ...props }, ref) => {
             disabled:cursor-not-allowed disabled:opacity-50`, className), ...props }), label && (_jsx("label", { htmlFor: id, className: "text-sm text-ink-2 cursor-pointer", children: label }))] }));
 });
 Radio.displayName = 'Radio';
+/**
+ * Both `Hint` and `Error` collapse rather than appearing: a validation message
+ * that pops into existence shoves the rest of the form down a line with no
+ * indication of where it came from, which is how a user loses their place in a
+ * long form the moment they mistype something.
+ *
+ * The exit only plays if the caller keeps the component mounted and empties its
+ * children. `{error && <Form.Error>…}` unmounts the whole thing, so it enters
+ * but cannot leave — which is why the message is keyed on its own text: a
+ * *changed* message still re-animates.
+ *
+ * `onMount` is the difference between the two: an error is something that
+ * *arrives*, so it earns an entrance wherever it turns up. A hint is usually
+ * printed with the field, and eight hints unfolding on page load is a form
+ * that looks like it is still loading.
+ */
+function Message({ children, className, onMount = false, ...rest }) {
+    const variants = useVariants(collapse);
+    return (_jsx(AnimatePresence, { initial: onMount, mode: "wait", children: children ? (_jsx(motion.p, { className: className, variants: variants, initial: "hidden", animate: "show", exit: "hidden", 
+            // Inline so a caller's className cannot remove the clip the height
+            // animation depends on.
+            style: { overflow: 'hidden' }, ...rest, children: children }, typeof children === 'string' ? children : 'message')) : null }));
+}
 function Hint({ children, className = '' }) {
-    return (_jsx("p", { className: cn(`text-xs text-ink-2`, className), children: children }));
+    return (_jsx(Message, { className: cn(`text-xs text-ink-2`, className), children: children }));
 }
 function FieldError({ children, className = '' }) {
-    return (_jsx("p", { className: cn(`text-xs text-danger-accent`, className), role: "alert", children: children }));
+    return (_jsx(Message, { className: cn(`text-xs text-danger-accent`, className), role: "alert", onMount: true, children: children }));
 }
 function InputGroup({ children, startAddon, endAddon, className = '' }) {
     return (_jsxs("div", { className: cn(`flex items-stretch`, className), children: [startAddon && (_jsx("div", { className: "flex items-center px-3 bg-input border border-r-0 border-line rounded-l-[8px] text-sm text-ink-2", children: startAddon })), _jsx("div", { className: "flex-1", children: children }), endAddon && (_jsx("div", { className: "flex items-center px-3 bg-input border border-l-0 border-line rounded-r-[8px] text-sm text-ink-2", children: endAddon }))] }));

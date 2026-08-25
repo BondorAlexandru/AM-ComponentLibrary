@@ -93,6 +93,15 @@ The three `animate-*` utilities need both a keyframe and (in Tailwind v4) an
 `--animate-*` entry in `@theme` for the keyframes to survive the build. AM
 Campaigns' `src/index.css` is the reference implementation.
 
+> **No longer required by any primitive.** `Modal`, `Drawer` and `Popover` now
+> animate with Motion, which needs no token and no keyframe — see
+> [MOTION.md](./MOTION.md). The three utilities stay listed because both apps
+> still use them in their own components, and because removing an export is a
+> breaking change (§C.6). A new app does not need to define them.
+>
+> This is also the fix for a bug that shipped: the CMS never defined any of the
+> three, so its overlays had no enter animation at all, silently.
+
 ---
 
 ---

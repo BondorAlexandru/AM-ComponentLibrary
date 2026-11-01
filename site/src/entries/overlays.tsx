@@ -71,6 +71,24 @@ function ModalDemo({ label, ...props }: { label: string } & Partial<Parameters<t
   )
 }
 
+function NonDismissibleDemo() {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>Saving…</Button>
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Uploading 3 files"
+        dismissible={false}
+        footer={<Button size="sm" onClick={() => setOpen(false)}>Done</Button>}
+      >
+        <p className="text-ink-2 text-[13px]">Escape and clicking outside are ignored until the work finishes.</p>
+      </Modal>
+    </>
+  )
+}
+
 function DrawerDemo() {
   const [open, setOpen] = useState(false)
   return (
@@ -139,6 +157,7 @@ export const modalEntry: DocEntry = {
         { name: 'footer', type: 'ReactNode', note: 'Right-aligned action row above a hairline rule. Omit it and no footer renders.' },
         { name: 'width', type: 'string', default: "'max-w-[520px]'", note: 'A utility class, so you can pass any max-width.' },
         { name: 'className', type: 'string', note: 'Appended to the panel, last. For surface and layout tweaks; the header and footer are not reachable from here.' },
+        { name: 'dismissible', type: 'boolean', default: 'true', note: 'false: Escape and the scrim do nothing and the header × is disabled, so the dialog closes only through your own buttons. Set it while saving or uploading so a stray Escape cannot abandon the work.' },
       ],
     },
     {
@@ -150,6 +169,7 @@ export const modalEntry: DocEntry = {
         { name: 'width', type: 'string', default: "'max-w-[min(1120px,94vw)]'", note: 'Wide by default — drawers here hold a record, not a form.' },
         { name: 'label', type: 'string', note: 'aria-label on the dialog. Set it: Drawer has no title to name it.' },
         { name: 'className', type: 'string', note: 'Appended to the panel, last, e.g. bg-surface border-l border-hairline for the CMS surface-coloured side panels.' },
+        { name: 'dismissible', type: 'boolean', default: 'true', note: 'As Modal: false turns off Escape and the scrim click.' },
       ],
     },
     {
@@ -180,6 +200,7 @@ export const modalEntry: DocEntry = {
         { label: '+ description', node: <ModalDemo label="With description" title="Rename campaign" description="Clients see this name in their review portal." /> },
         { label: '+ footer', node: <ModalDemo label="With footer" footer={<><Button variant="tertiary" size="sm">Cancel</Button><Button size="sm">Save</Button></>} /> },
         { label: 'wide', node: <ModalDemo label="Wide (720px)" width="max-w-[720px]" /> },
+        { label: 'dismissible={false}', note: 'Escape and the scrim do nothing; the × is disabled. Close it from the footer.', node: <NonDismissibleDemo /> },
         { label: 'long body scrolls', node: <ModalDemo label="Long body" children={<div className="flex flex-col gap-3">{Array.from({ length: 14 }, (_, i) => <p key={i} className="text-ink-2 text-[13px]">Paragraph {i + 1} — the body scrolls while the header and footer stay put.</p>)}</div>} /> },
         { label: 'nested in a Drawer', note: 'Escape closes the Modal first, not both.', node: <NestedDemo /> },
       ],

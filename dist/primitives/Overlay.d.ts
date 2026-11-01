@@ -22,7 +22,7 @@
  * on the white surface.
  */
 import { type ReactNode } from 'react';
-export declare function Drawer({ open, onClose, children, width, label, className, }: {
+export declare function Drawer({ open, onClose, children, width, label, className, dismissible, }: {
     open: boolean;
     onClose: () => void;
     children: ReactNode;
@@ -30,8 +30,13 @@ export declare function Drawer({ open, onClose, children, width, label, classNam
     label?: string;
     /** Appended to the panel, last — e.g. `bg-surface border-l border-hairline`. */
     className?: string;
+    /**
+     * When false, Escape and a scrim click do nothing — the panel closes only
+     * through your own controls. Use it while something is saving or uploading.
+     */
+    dismissible?: boolean;
 }): import("react").ReactPortal | null;
-export declare function Modal({ open, onClose, title, description, children, footer, width, className, }: {
+export declare function Modal({ open, onClose, title, description, children, footer, width, className, dismissible, }: {
     open: boolean;
     onClose: () => void;
     title: string;
@@ -41,5 +46,11 @@ export declare function Modal({ open, onClose, title, description, children, foo
     width?: string;
     /** Appended to the panel, last. */
     className?: string;
+    /**
+     * When false, Escape and a scrim click do nothing, and the header close
+     * button is disabled — the dialog closes only through your own controls.
+     * Use it while something is saving or uploading.
+     */
+    dismissible?: boolean;
 }): import("react").ReactPortal | null;
 //# sourceMappingURL=Overlay.d.ts.map

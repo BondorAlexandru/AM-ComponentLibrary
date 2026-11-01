@@ -46,11 +46,11 @@ const slideFromRight = slideFrom('right')
  * after `open` goes false. Releasing the scroll lock on unmount instead would
  * leave the page frozen for that window, which reads as the app hanging.
  */
-function useOverlayBehaviour(open: boolean, onClose: () => void) {
+function useOverlayBehaviour(open: boolean, onClose: () => void, dismissible = true) {
   const ref = useRef<HTMLDivElement>(null)
   // Initial focus is the panel itself (tabIndex -1), as before — the first
   // control inside a drawer is rarely the right place to land.
-  useDialogA11y(ref, open, onClose, { initialFocus: ref })
+  useDialogA11y(ref, open, onClose, { initialFocus: ref, closeOnEscape: dismissible })
 
   useEffect(() => {
     if (!open) return
@@ -71,6 +71,7 @@ export function Drawer({
   width = 'max-w-[min(1120px,94vw)]',
   label,
   className,
+  dismissible = true,
 }: {
   open: boolean
   onClose: () => void
@@ -79,8 +80,13 @@ export function Drawer({
   label?: string
   /** Appended to the panel, last — e.g. `bg-surface border-l border-hairline`. */
   className?: string
+  /**
+   * When false, Escape and a scrim click do nothing — the panel closes only
+   * through your own controls. Use it while something is saving or uploading.
+   */
+  dismissible?: boolean
 }) {
-  const ref = useOverlayBehaviour(open, onClose)
+  const ref = useOverlayBehaviour(open, onClose, dismissible)
   const scrim = useVariants(fade)
   const panel = useVariants(slideFromRight)
   // The portal used to be guarded by `if (!open) return null`, which also
@@ -100,7 +106,7 @@ export function Drawer({
         >
           <motion.div
             className="absolute inset-0 bg-[rgba(10,10,15,0.4)]"
-            onClick={onClose}
+            onClick={dismissible ? onClose : undefined}
             variants={scrim}
             initial="hidden"
             animate="show"
@@ -137,6 +143,7 @@ export function Modal({
   footer,
   width = 'max-w-[520px]',
   className,
+  dismissible = true,
 }: {
   open: boolean
   onClose: () => void
@@ -147,8 +154,14 @@ export function Modal({
   width?: string
   /** Appended to the panel, last. */
   className?: string
+  /**
+   * When false, Escape and a scrim click do nothing, and the header close
+   * button is disabled — the dialog closes only through your own controls.
+   * Use it while something is saving or uploading.
+   */
+  dismissible?: boolean
 }) {
-  const ref = useOverlayBehaviour(open, onClose)
+  const ref = useOverlayBehaviour(open, onClose, dismissible)
   const scrim = useVariants(fade)
   const panel = useVariants(popCentered)
   // The title names the dialog, and the description describes it.
@@ -169,7 +182,7 @@ export function Modal({
         >
           <motion.div
             className="absolute inset-0 bg-[rgba(10,10,15,0.4)]"
-            onClick={onClose}
+            onClick={dismissible ? onClose : undefined}
             variants={scrim}
             initial="hidden"
             animate="show"
@@ -193,7 +206,7 @@ export function Modal({
                 <h2 id={titleId} className="text-[17px] font-semibold tracking-[-0.01em]">{title}</h2>
                 {description && <p id={descriptionId} className="text-ink-2 mt-1 text-[13px] leading-relaxed">{description}</p>}
               </div>
-              <IconButton type="button" variant="ghost" size="sm" onClick={onClose} aria-label="Close" icon={<X size={16} />} />
+              <IconButton type="button" variant="ghost" size="sm" onClick={onClose} disabled={!dismissible} aria-label="Close" icon={<X size={16} />} />
             </header>
             {children && <div className="overflow-y-auto px-6 pb-2">{children}</div>}
             {footer && (

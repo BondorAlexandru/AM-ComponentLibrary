@@ -43,11 +43,11 @@ const slideFromRight = slideFrom('right');
  * after `open` goes false. Releasing the scroll lock on unmount instead would
  * leave the page frozen for that window, which reads as the app hanging.
  */
-function useOverlayBehaviour(open, onClose) {
+function useOverlayBehaviour(open, onClose, dismissible = true) {
     const ref = useRef(null);
     // Initial focus is the panel itself (tabIndex -1), as before — the first
     // control inside a drawer is rarely the right place to land.
-    useDialogA11y(ref, open, onClose, { initialFocus: ref });
+    useDialogA11y(ref, open, onClose, { initialFocus: ref, closeOnEscape: dismissible });
     useEffect(() => {
         if (!open)
             return;
@@ -59,8 +59,8 @@ function useOverlayBehaviour(open, onClose) {
     }, [open]);
     return ref;
 }
-export function Drawer({ open, onClose, children, width = 'max-w-[min(1120px,94vw)]', label, className, }) {
-    const ref = useOverlayBehaviour(open, onClose);
+export function Drawer({ open, onClose, children, width = 'max-w-[min(1120px,94vw)]', label, className, dismissible = true, }) {
+    const ref = useOverlayBehaviour(open, onClose, dismissible);
     const scrim = useVariants(fade);
     const panel = useVariants(slideFromRight);
     // The portal used to be guarded by `if (!open) return null`, which also
@@ -68,10 +68,10 @@ export function Drawer({ open, onClose, children, width = 'max-w-[min(1120px,94v
     // the close, so the SSR guard has to be explicit now.
     if (typeof document === 'undefined')
         return null;
-    return createPortal(_jsx(AnimatePresence, { children: open && (_jsxs("div", { className: "fixed inset-0 z-50 flex justify-end", role: "dialog", "aria-modal": "true", "aria-label": label, children: [_jsx(motion.div, { className: "absolute inset-0 bg-[rgba(10,10,15,0.4)]", onClick: onClose, variants: scrim, initial: "hidden", animate: "show", exit: "exit" }), _jsx(motion.div, { ref: ref, tabIndex: -1, className: cn('bg-canvas text-ink relative flex h-full w-full flex-col shadow-overlay outline-none', width, className), variants: panel, initial: "hidden", animate: "show", exit: "exit", children: children })] }, "drawer")) }), document.body);
+    return createPortal(_jsx(AnimatePresence, { children: open && (_jsxs("div", { className: "fixed inset-0 z-50 flex justify-end", role: "dialog", "aria-modal": "true", "aria-label": label, children: [_jsx(motion.div, { className: "absolute inset-0 bg-[rgba(10,10,15,0.4)]", onClick: dismissible ? onClose : undefined, variants: scrim, initial: "hidden", animate: "show", exit: "exit" }), _jsx(motion.div, { ref: ref, tabIndex: -1, className: cn('bg-canvas text-ink relative flex h-full w-full flex-col shadow-overlay outline-none', width, className), variants: panel, initial: "hidden", animate: "show", exit: "exit", children: children })] }, "drawer")) }), document.body);
 }
-export function Modal({ open, onClose, title, description, children, footer, width = 'max-w-[520px]', className, }) {
-    const ref = useOverlayBehaviour(open, onClose);
+export function Modal({ open, onClose, title, description, children, footer, width = 'max-w-[520px]', className, dismissible = true, }) {
+    const ref = useOverlayBehaviour(open, onClose, dismissible);
     const scrim = useVariants(fade);
     const panel = useVariants(popCentered);
     // The title names the dialog, and the description describes it.
@@ -79,6 +79,6 @@ export function Modal({ open, onClose, title, description, children, footer, wid
     const descriptionId = useId();
     if (typeof document === 'undefined')
         return null;
-    return createPortal(_jsx(AnimatePresence, { children: open && (_jsxs("div", { className: "fixed inset-0 z-50 flex items-center justify-center p-4", role: "dialog", "aria-modal": "true", "aria-labelledby": titleId, "aria-describedby": description ? descriptionId : undefined, children: [_jsx(motion.div, { className: "absolute inset-0 bg-[rgba(10,10,15,0.4)]", onClick: onClose, variants: scrim, initial: "hidden", animate: "show", exit: "exit" }), _jsxs(motion.div, { ref: ref, tabIndex: -1, className: cn('bg-surface text-ink rounded-card relative flex max-h-[88vh] w-full flex-col shadow-overlay outline-none', width, className), variants: panel, initial: "hidden", animate: "show", exit: "exit", children: [_jsxs("header", { className: "flex items-start justify-between gap-4 px-6 pt-5 pb-4", children: [_jsxs("div", { children: [_jsx("h2", { id: titleId, className: "text-[17px] font-semibold tracking-[-0.01em]", children: title }), description && _jsx("p", { id: descriptionId, className: "text-ink-2 mt-1 text-[13px] leading-relaxed", children: description })] }), _jsx(IconButton, { type: "button", variant: "ghost", size: "sm", onClick: onClose, "aria-label": "Close", icon: _jsx(X, { size: 16 }) })] }), children && _jsx("div", { className: "overflow-y-auto px-6 pb-2", children: children }), footer && (_jsx("footer", { className: "border-hairline flex items-center justify-end gap-2 border-t px-6 py-4", children: footer }))] })] }, "modal")) }), document.body);
+    return createPortal(_jsx(AnimatePresence, { children: open && (_jsxs("div", { className: "fixed inset-0 z-50 flex items-center justify-center p-4", role: "dialog", "aria-modal": "true", "aria-labelledby": titleId, "aria-describedby": description ? descriptionId : undefined, children: [_jsx(motion.div, { className: "absolute inset-0 bg-[rgba(10,10,15,0.4)]", onClick: dismissible ? onClose : undefined, variants: scrim, initial: "hidden", animate: "show", exit: "exit" }), _jsxs(motion.div, { ref: ref, tabIndex: -1, className: cn('bg-surface text-ink rounded-card relative flex max-h-[88vh] w-full flex-col shadow-overlay outline-none', width, className), variants: panel, initial: "hidden", animate: "show", exit: "exit", children: [_jsxs("header", { className: "flex items-start justify-between gap-4 px-6 pt-5 pb-4", children: [_jsxs("div", { children: [_jsx("h2", { id: titleId, className: "text-[17px] font-semibold tracking-[-0.01em]", children: title }), description && _jsx("p", { id: descriptionId, className: "text-ink-2 mt-1 text-[13px] leading-relaxed", children: description })] }), _jsx(IconButton, { type: "button", variant: "ghost", size: "sm", onClick: onClose, disabled: !dismissible, "aria-label": "Close", icon: _jsx(X, { size: 16 }) })] }), children && _jsx("div", { className: "overflow-y-auto px-6 pb-2", children: children }), footer && (_jsx("footer", { className: "border-hairline flex items-center justify-end gap-2 border-t px-6 py-4", children: footer }))] })] }, "modal")) }), document.body);
 }
 //# sourceMappingURL=Overlay.js.map

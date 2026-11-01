@@ -196,3 +196,22 @@ describe('autoFocus inside a dialog', () => {
     expect(opener).toHaveFocus()
   })
 })
+
+describe('dismissible={false}', () => {
+  it('ignores Escape and the scrim, and disables the header close', async () => {
+    const user = userEvent.setup()
+    const onClose = vi.fn()
+    render(
+      <AmUiProvider theme={noMotion}>
+        <Modal open onClose={onClose} title="Saving" dismissible={false}>
+          <button>Inside</button>
+        </Modal>
+      </AmUiProvider>,
+    )
+    await user.keyboard('{Escape}')
+    const scrim = screen.getByRole('dialog').firstElementChild as HTMLElement
+    await user.click(scrim)
+    expect(onClose).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Close' })).toBeDisabled()
+  })
+})

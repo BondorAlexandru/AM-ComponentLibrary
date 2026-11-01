@@ -1,16 +1,42 @@
 'use client';
 import { useEffect, useRef } from 'react';
+/** Open dialogs, oldest first. The last entry is the one that owns the keyboard. */
+const openDialogs = [];
+/**
+ * The last element focused outside any modal dialog. An `autoFocus` control
+ * inside a dialog takes focus during React's commit, before this hook's effect
+ * runs, so by then `document.activeElement` is already inside the dialog and
+ * the opener is lost. Tracking focus outside dialogs keeps it.
+ */
+let lastFocusOutside = null;
+let tracking = false;
+function trackFocusOutsideDialogs() {
+    if (tracking || typeof document === 'undefined')
+        return;
+    tracking = true;
+    document.addEventListener('focusin', (e) => {
+        const t = e.target;
+        if (t && !t.closest('[aria-modal="true"]'))
+            lastFocusOutside = t;
+    }, true);
+}
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 /**
  * Keyboard + screen-reader behaviour for a modal dialog while `isOpen`: focus
  * moves into the dialog (to `initialFocus`, else the first control, else the
- * dialog itself), Tab / Shift+Tab stay inside it, Escape calls `onClose`
+ * dialog itself — unless an `autoFocus` control inside already has it), Tab / Shift+Tab stay inside it, Escape calls `onClose`
  * (unless `closeOnEscape` is false, e.g. while saving), and focus returns to
  * whatever was focused before it opened.
  *
  * Keyed on `isOpen`, not on mount: an exit animation keeps the panel in the DOM
  * for a few hundred milliseconds after the state flips, and focus must be
  * handed back the moment the dialog is logically closed (CLAUDE.md §C.15).
+ *
+ * Dialogs stack. Every open dialog registers itself, and only the topmost one
+ * answers Escape and traps Tab: a media picker opened from inside a settings
+ * modal closes on its own with Escape, and Tab cycles inside the picker, not
+ * the modal underneath. Without the stack both document listeners fire, so one
+ * Escape closes everything and the lower dialog drags focus back to itself.
  *
  * Lifted from the CMS (`components/ui/useDialogA11y.ts`), where it wrapped the
  * library's ConfirmDialog; it now backs ConfirmDialog, Modal and Drawer here.
@@ -23,13 +49,27 @@ export function useDialogA11y(dialogRef, isOpen, onClose, { initialFocus, closeO
         escapeRef.current = closeOnEscape;
     }, [onClose, closeOnEscape]);
     useEffect(() => {
+        trackFocusOutsideDialogs();
+    }, []);
+    useEffect(() => {
         if (!isOpen)
             return;
-        const previouslyFocused = document.activeElement;
+        const self = Symbol('dialog');
+        openDialogs.push(self);
+        const isTopmost = () => openDialogs[openDialogs.length - 1] === self;
         const dialog = dialogRef.current;
-        const target = initialFocus?.current ?? dialog?.querySelector(FOCUSABLE) ?? dialog;
-        target?.focus();
+        const active = document.activeElement;
+        // An autoFocus control inside the dialog already has focus: keep it there,
+        // and restore to the opener recorded before it moved.
+        const focusAlreadyInside = !!(dialog && active && dialog.contains(active));
+        const previouslyFocused = focusAlreadyInside ? lastFocusOutside : active;
+        if (!focusAlreadyInside) {
+            const target = initialFocus?.current ?? dialog?.querySelector(FOCUSABLE) ?? dialog;
+            target?.focus();
+        }
         const onKeyDown = (e) => {
+            if (!isTopmost())
+                return;
             const el = dialogRef.current;
             if (!el)
                 return;
@@ -61,6 +101,9 @@ export function useDialogA11y(dialogRef, isOpen, onClose, { initialFocus, closeO
         };
         document.addEventListener('keydown', onKeyDown);
         return () => {
+            const i = openDialogs.indexOf(self);
+            if (i !== -1)
+                openDialogs.splice(i, 1);
             document.removeEventListener('keydown', onKeyDown);
             if (previouslyFocused && document.contains(previouslyFocused))
                 previouslyFocused.focus();

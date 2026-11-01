@@ -135,3 +135,64 @@ describe('Modal — focus trap', () => {
     expect(screen.getByRole('dialog').querySelector('.bg-canvas')).not.toBeNull()
   })
 })
+
+describe('stacked dialogs', () => {
+  it('lets only the topmost dialog answer Escape and Tab', async () => {
+    const user = userEvent.setup()
+    function Harness() {
+      const [outer, setOuter] = useState(false)
+      const [inner, setInner] = useState(false)
+      return (
+        <AmUiProvider theme={noMotion}>
+          <button onClick={() => setOuter(true)}>Open outer</button>
+          <Modal open={outer} onClose={() => setOuter(false)} title="Settings">
+            <button onClick={() => setInner(true)}>Pick image</button>
+          </Modal>
+          <Modal open={inner} onClose={() => setInner(false)} title="Media">
+            <button>First</button>
+            <button>Second</button>
+          </Modal>
+        </AmUiProvider>
+      )
+    }
+    render(<Harness />)
+    await user.click(screen.getByText('Open outer'))
+    await user.click(screen.getByText('Pick image'))
+    const media = screen.getByRole('dialog', { name: 'Media' })
+    await user.tab()
+    await user.tab()
+    await user.tab()
+    await user.tab()
+    expect(media.contains(document.activeElement)).toBe(true)
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Media' })).not.toBeInTheDocument())
+    expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Settings' })).not.toBeInTheDocument())
+  })
+})
+
+describe('autoFocus inside a dialog', () => {
+  it('keeps focus on the autoFocus field and restores it to the opener on close', async () => {
+    const user = userEvent.setup()
+    function Harness() {
+      const [open, setOpen] = useState(false)
+      return (
+        <AmUiProvider theme={noMotion}>
+          <button onClick={() => setOpen(true)}>Reset password</button>
+          <Modal open={open} onClose={() => setOpen(false)} title="Reset password">
+            {/* eslint-disable-next-line jsx-a11y/no-autofocus -- the behaviour under test */}
+            <input aria-label="New password" autoFocus />
+          </Modal>
+        </AmUiProvider>
+      )
+    }
+    render(<Harness />)
+    const opener = screen.getByText('Reset password')
+    await user.click(opener)
+    await waitFor(() => expect(screen.getByLabelText('New password')).toHaveFocus())
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(opener).toHaveFocus()
+  })
+})

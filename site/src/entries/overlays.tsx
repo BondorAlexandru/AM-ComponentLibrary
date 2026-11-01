@@ -157,7 +157,7 @@ export const modalEntry: DocEntry = {
       rows: [
         { name: 'ref', type: 'RefObject<HTMLElement>', required: true, note: 'The dialog panel. Tab is trapped inside it; Escape anywhere calls onClose.' },
         { name: 'isOpen', type: 'boolean', required: true, note: 'Keyed on this, not on mount, so focus returns the moment the state flips, before an exit animation ends.' },
-        { name: 'options.initialFocus', type: 'RefObject<HTMLElement>', note: 'Where focus lands on open. Default: the first focusable control, else the panel.' },
+        { name: 'options.initialFocus', type: 'RefObject<HTMLElement>', note: 'Where focus lands on open. Default: the first focusable control, else the panel. Ignored when an autoFocus control inside the dialog already has focus — that wins, and focus still returns to the opener on close.' },
         { name: 'options.closeOnEscape', type: 'boolean', default: 'true', note: 'Set false while saving, so Escape cannot abandon a half-applied action.' },
       ],
     },
@@ -166,7 +166,7 @@ export const modalEntry: DocEntry = {
     'Both animate in *and* out. The scrim crossfades (fade) while the panel pops from 0.96 (popCentered, Modal) or slides off its own right edge (slideFrom(\'right\'), Drawer). AnimatePresence wraps the conditional rather than sitting inside it — with the old `if (!open) return null` shape the element was gone before anything could animate it away.',
     'They used to carry animate-fade-in / animate-slide-in / animate-pop-in. Those had to go, not merely be joined: the CMS never declared the keyframes at all, so there was no enter animation there; and AM Campaigns declares them with animation-fill-mode: both, and a finished CSS animation outranks inline style, which pins opacity at 1 and makes any JS exit invisible. Nothing needs a token now.',
     'The exit keeps the panel mounted for a couple of hundred milliseconds after open goes false, so the scroll lock and focus restore fire on the state change rather than on unmount. Cleaning them up on unmount instead would freeze the page for the length of the animation, which reads as the app hanging.',
-    'The Escape handler calls stopPropagation, so a Modal opened from inside a Drawer closes only the Modal. Open the nested example and press Escape twice.',
+    'Open dialogs form a stack and only the topmost one answers Escape and traps Tab, so a Modal opened from inside a Drawer (or a picker opened from inside a settings modal) closes on its own and keeps focus to itself. Open the nested example and press Escape twice. Before 0.4.1 both document listeners fired, so one Escape closed everything.',
     'Body scroll lock captures and restores the previous overflow value rather than clearing it, so two overlays closing out of order do not leave the page unscrollable.',
     'The backdrop is a hardcoded rgba(10,10,15,0.4) rather than a token — inherited from AM Campaigns, and the one literal colour left in the library.',
   ],

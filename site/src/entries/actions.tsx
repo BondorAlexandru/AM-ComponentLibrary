@@ -2,7 +2,7 @@ import { Button, IconButton } from '@am/ui'
 import { Check, ChevronDown, MoreHorizontal, Pencil, Plus, Trash2 } from '@am/ui/icons'
 import type { DocEntry } from '../types.ts'
 
-const BUTTON_VARIANTS = ['primary', 'secondary', 'tertiary', 'danger', 'success', 'ghost', 'quiet', 'dark'] as const
+const BUTTON_VARIANTS = ['primary', 'secondary', 'tertiary', 'danger', 'success', 'ghost', 'quiet', 'dark', 'link'] as const
 const SIZES = ['sm', 'md', 'lg'] as const
 
 export const buttonEntry: DocEntry = {
@@ -18,7 +18,7 @@ export const buttonEntry: DocEntry = {
   props: [
     {
       rows: [
-        { name: 'variant', type: "'primary' | 'secondary' | 'tertiary' | 'danger' | 'success' | 'ghost' | 'quiet' | 'dark'", default: "'primary'", note: 'The first six are the CMS’s and their classes are frozen. quiet and dark were added for AM Campaigns.' },
+        { name: 'variant', type: "'primary' | 'secondary' | 'tertiary' | 'danger' | 'success' | 'ghost' | 'quiet' | 'dark' | 'link'", default: "'primary'", note: 'The first six are the CMS’s and their classes are frozen. quiet and dark were added for AM Campaigns. link is an action that reads as inline text (accent, underline on hover); it drops the size’s height and padding so it sits on the baseline, and keeps the size’s font size. Recolour it with a className, e.g. text-ink-2 hover:text-ink for a quiet one.' },
         { name: 'size', type: "'sm' | 'md' | 'lg'", default: "'md'", note: 'Fixed heights (28 / 34 / 40px) rather than padding-driven, so buttons line up exactly in a toolbar row.' },
         { name: 'loading', type: 'boolean', default: 'false', note: 'Swaps children for the app spinner and disables the button. Also hides leftIcon/rightIcon.' },
         { name: 'fullWidth', type: 'boolean', default: 'false', note: 'Stretches to the container. Used for form submits and mobile sheets.' },
@@ -122,8 +122,8 @@ export const iconButtonEntry: DocEntry = {
       rows: [
         { name: 'icon', type: 'ReactNode', required: true, note: 'The glyph. Size it with a className (h-4 w-4) rather than relying on the font size.' },
         { name: 'aria-label', type: 'string', required: true, note: 'Required, not optional. This is the button’s only accessible name.' },
-        { name: 'variant', type: "'primary' | 'secondary' | 'tertiary' | 'danger' | 'ghost'", default: "'ghost'", note: 'Note the different default and the shorter list than Button: ghost here is transparent, and there is no success.' },
-        { name: 'size', type: "'sm' | 'md' | 'lg'", default: "'md'", note: '32 / 40 / 44px squares. Explicit px because the CMS overrides --spacing-8/10/11, which makes h-8/h-10/h-11 mis-size.' },
+        { name: 'variant', type: "'primary' | 'secondary' | 'tertiary' | 'danger' | 'ghost' | 'bare'", default: "'ghost'", note: 'Note the different default and the shorter list than Button: ghost here is transparent, and there is no success. bare is the CMS row hover action: no box, no wash, the glyph goes from ink-3 to ink-2.' },
+        { name: 'size', type: "'sm' | 'md' | 'lg' | 'auto'", default: "'md'", note: '32 / 40 / 44px squares. Explicit px because the CMS overrides --spacing-8/10/11, which makes h-8/h-10/h-11 mis-size. auto sets no box, so the icon’s own size is the button’s size. Pair it with bare.' },
         { name: 'disabled', type: 'boolean', default: 'false', note: '50% opacity, pointer blocked.' },
       ],
     },
@@ -156,6 +156,16 @@ export const iconButtonEntry: DocEntry = {
           </>
         ),
       })),
+    },
+    {
+      title: 'Bare — row hover actions',
+      note: 'variant="bare" size="auto": the 13px glyphs at the end of a sidebar row or table cell. The ::before hit area still extends 6px past the glyph. Recolour the hover with a className, e.g. hover:text-danger-accent for a delete.',
+      cols: 3,
+      items: [
+        { label: 'bare + auto', checker: true, node: <IconButton variant="bare" size="auto" aria-label="Edit" icon={<Pencil className="h-[13px] w-[13px]" />} /> },
+        { label: 'danger on hover', checker: true, node: <IconButton variant="bare" size="auto" className="hover:text-danger-accent" aria-label="Delete" icon={<Trash2 className="h-[13px] w-[13px]" />} /> },
+        { label: 'a hover-action row', checker: true, node: <div className="flex items-center gap-2"><IconButton variant="bare" size="auto" aria-label="Add" icon={<Plus className="h-[13px] w-[13px]" />} /><IconButton variant="bare" size="auto" aria-label="Edit" icon={<Pencil className="h-[13px] w-[13px]" />} /><IconButton variant="bare" size="auto" className="hover:text-danger-accent" aria-label="Delete" icon={<Trash2 className="h-[13px] w-[13px]" />} /></div> },
+      ],
     },
     {
       title: 'Interactive states',

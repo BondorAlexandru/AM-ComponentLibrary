@@ -37,8 +37,23 @@ interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>
     size?: 'sm' | 'md' | 'lg';
 }
 interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
-    label?: string;
+    /** The caption. A node, so it can carry a hint or an inline link. */
+    label?: ReactNode;
     error?: boolean;
+    /**
+     * "Some of them". A DOM property, not an attribute, so it is set in an
+     * effect; the box shows a dash and reports `aria-checked="mixed"`. Clicking
+     * it reports `checked` as the browser decides, as a native checkbox does.
+     */
+    indeterminate?: boolean;
+}
+interface SwitchProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onChange' | 'type'> {
+    checked: boolean;
+    onChange: (checked: boolean) => void;
+    /** Required unless `aria-label` is supplied some other way — a bare toggle has no name. */
+    'aria-label'?: string;
+    /** Visible text label to the right; also names the control when aria-label is absent. */
+    label?: string;
 }
 interface RadioProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
     label?: string;
@@ -72,6 +87,7 @@ export declare const Form: {
     };
     Checkbox: React.ForwardRefExoticComponent<CheckboxProps & React.RefAttributes<HTMLInputElement>>;
     Radio: React.ForwardRefExoticComponent<RadioProps & React.RefAttributes<HTMLInputElement>>;
+    Switch: React.ForwardRefExoticComponent<SwitchProps & React.RefAttributes<HTMLButtonElement>>;
     Hint: typeof Hint;
     Error: typeof FieldError;
     InputGroup: typeof InputGroup;

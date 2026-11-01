@@ -25,7 +25,7 @@ import { type VariantProps } from 'class-variance-authority';
  * `IconButton`'s ghost already used, now available on a text button.
  */
 export declare const buttonVariants: (props?: ({
-    variant?: "primary" | "secondary" | "tertiary" | "danger" | "success" | "ghost" | "quiet" | "dark" | null | undefined;
+    variant?: "link" | "primary" | "secondary" | "tertiary" | "danger" | "success" | "ghost" | "quiet" | "dark" | null | undefined;
     size?: "sm" | "md" | "lg" | null | undefined;
     fullWidth?: boolean | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
@@ -40,8 +40,8 @@ export interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonE
 }
 export declare const Button: React.ForwardRefExoticComponent<ButtonProps & React.RefAttributes<HTMLButtonElement>>;
 export declare const iconButtonVariants: (props?: ({
-    variant?: "primary" | "secondary" | "tertiary" | "danger" | "ghost" | null | undefined;
-    size?: "sm" | "md" | "lg" | null | undefined;
+    variant?: "primary" | "secondary" | "tertiary" | "danger" | "ghost" | "bare" | null | undefined;
+    size?: "auto" | "sm" | "md" | "lg" | null | undefined;
 } & import("class-variance-authority/types").ClassProp) | undefined) => string;
 export type IconButtonVariants = VariantProps<typeof iconButtonVariants>;
 export interface IconButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'color'>, IconButtonVariants {

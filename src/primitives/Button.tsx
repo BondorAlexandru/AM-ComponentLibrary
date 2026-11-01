@@ -64,6 +64,9 @@ export const buttonVariants = cva(
         ghost: 'bg-input border border-hairline text-ink-2 hover:text-ink',
         quiet: 'bg-transparent text-ink-2 hover:bg-input hover:text-ink',
         dark: 'bg-ink text-canvas hover:opacity-90 active:opacity-95',
+        // An action that reads as inline text: "Show history", "Reset to auto".
+        // Height and padding are stripped below so it sits on the text baseline.
+        link: 'bg-transparent text-accent-text hover:underline underline-offset-2',
       },
       size: {
         // Explicit heights so buttons line up exactly in bar rows
@@ -74,6 +77,8 @@ export const buttonVariants = cva(
       },
       fullWidth: { true: 'w-full', false: '' },
     },
+    // Listed after size, so tailwind-merge lets these win over the size's h-/px-.
+    compoundVariants: [{ variant: 'link', class: 'h-auto px-0' }],
     defaultVariants: { variant: 'primary', size: 'md', fullWidth: false },
   },
 )
@@ -171,11 +176,16 @@ export const iconButtonVariants = cva(
         tertiary: 'bg-accent-soft text-accent-text hover:opacity-80',
         danger: 'bg-transparent text-danger-accent hover:bg-danger-accent/10',
         ghost: 'bg-transparent text-ink-2 hover:bg-input hover:text-ink',
+        // The CMS's row hover actions: no box, no wash, just the glyph. The
+        // ::before hit area still applies, so a 13px icon is still tappable.
+        bare: 'bg-transparent text-ink-3 hover:text-ink-2',
       },
       size: {
         sm: cn(H.iconSm, 'text-sm'),
         md: cn(H.iconMd, 'text-base'),
         lg: cn(H.iconLg, 'text-lg'),
+        // No box at all — the icon's own size is the button's size. Pair with `bare`.
+        auto: '',
       },
     },
     defaultVariants: { variant: 'ghost', size: 'md' },

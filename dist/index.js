@@ -10,6 +10,8 @@
  */
 export { cn } from './lib/cn.js';
 export { formatNumber, formatBytes } from './lib/format.js';
+// Focus trap + Escape + focus restore for any custom dialog an app still owns.
+export { useDialogA11y } from './lib/useDialogA11y.js';
 export { AmUiProvider, DefaultSpinner, Spinner, useAmUi, useComponentTheme, } from './theme.js';
 // The `asChild` implementation, exported so an app can build its own polymorphic
 // component on the same merge rules.
@@ -32,6 +34,7 @@ export { Form } from './primitives/Form.js';
 export { Menu } from './primitives/Menu.js';
 export { MediaThumb, isVideoUrl } from './primitives/MediaThumb.js';
 export { Skeleton } from './primitives/Skeleton.js';
+export { Toast, ToastContainer, useToast } from './primitives/Toast.js';
 export { Delta, KpiCard, BarList, ScoreGauge, SectionCard, EmptyHint, } from './primitives/Metrics.js';
 // Primitives contributed from AM Campaigns — new to the CMS, which is unaffected.
 export { Pill } from './primitives/Pill.js';

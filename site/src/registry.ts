@@ -3,7 +3,7 @@ import { buttonEntry, iconButtonEntry } from './entries/actions.tsx'
 import { badgeEntry, pillEntry } from './entries/status.tsx'
 import { cardEntry, emptyStateEntry, mediaThumbEntry, skeletonEntry } from './entries/containers.tsx'
 import { dropdownEntry, formEntry } from './entries/forms.tsx'
-import { confirmDialogEntry, menuEntry, modalEntry, popoverEntry } from './entries/overlays.tsx'
+import { confirmDialogEntry, menuEntry, modalEntry, popoverEntry, toastEntry } from './entries/overlays.tsx'
 import { iconsEntry, spinnerEntry, tokensEntry, utilsEntry } from './entries/foundations.tsx'
 import { motionEntry } from './entries/motion.tsx'
 import { barListEntry, barsEntry, formattersEntry, gaugeEntry, layoutEntry, statEntry } from './entries/data.tsx'
@@ -46,6 +46,7 @@ export const ENTRIES: DocEntry[] = [
   confirmDialogEntry,
   menuEntry,
   popoverEntry,
+  toastEntry,
 ]
 
 export const GROUP_ORDER = [

@@ -45,6 +45,17 @@ interface DropdownProps {
   className?: string
   'aria-label'?: string
   title?: string
+  /** Goes on the trigger, so a `<label htmlFor>` names it like a native select. */
+  id?: string
+  /**
+   * Form integration. With either set, a visually hidden native `<select>`
+   * carries the value, so the surrounding form submits it and `required` gets
+   * the browser's own validation — the two things a custom listbox otherwise
+   * silently loses.
+   */
+  name?: string
+  required?: boolean
+  form?: string
 }
 
 /** Recursively pull { value, label } out of <option>/<optgroup> children. */
@@ -83,6 +94,10 @@ export function Dropdown({
   className = '',
   'aria-label': ariaLabel,
   title,
+  id,
+  name,
+  required,
+  form,
 }: DropdownProps) {
   const opts = options ?? optionsFromChildren(children)
   const selected = opts.find((o) => o.value === value)
@@ -225,11 +240,13 @@ export function Dropdown({
     <>
       <button
         ref={triggerRef}
+        id={id}
         type="button"
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={ariaLabel}
+        aria-required={required || undefined}
         title={title}
         onClick={() => {
           setOpen((o) => {
@@ -251,6 +268,31 @@ export function Dropdown({
           aria-hidden
         />
       </button>
+      {(name || required) && (
+        // The form's view of this control. Absolutely positioned with no
+        // offsets, so it sits at its static position — right after the trigger
+        // — and the browser's "please select an item" bubble appears beside the
+        // control the user can see. Not focusable by tab; when validation
+        // focuses it anyway, the trigger takes over.
+        <select
+          aria-hidden
+          tabIndex={-1}
+          name={name}
+          required={required}
+          form={form}
+          disabled={disabled}
+          value={value ?? ''}
+          onChange={(e) => onChange({ target: { value: e.target.value } })}
+          onFocus={() => triggerRef.current?.focus()}
+          onInvalid={() => triggerRef.current?.focus()}
+          style={{ position: 'absolute', width: 1, height: 1, margin: 0, opacity: 0, pointerEvents: 'none' }}
+        >
+          <option value="" disabled={required} />
+          {opts.map((o) => (
+            <option key={o.value} value={o.value} disabled={o.disabled} />
+          ))}
+        </select>
+      )}
       {listbox}
     </>
   )

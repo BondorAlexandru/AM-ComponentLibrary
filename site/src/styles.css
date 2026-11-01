@@ -34,7 +34,7 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   The three tier-2 `animate-*` utilities, mirrored from ../Influencer/src/index.css.
+   The three tier-2 `animate-*` utilities, mirrored from ../Flute/src/index.css.
 
    Nothing in the library emits these class names any more — Modal, Drawer,
    Popover, Dropdown and Menu are animated by Motion, and Skeleton's `wave` no

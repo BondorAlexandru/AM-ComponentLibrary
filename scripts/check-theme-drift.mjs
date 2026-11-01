@@ -37,9 +37,17 @@ const SOURCES = [
   },
   {
     themeId: 'campaigns',
-    file: resolve(repo, '../Influencer/src/index.css'),
+    file: resolve(repo, '../Flute/src/index.css'),
     label: 'AM Campaigns (:root)',
-    block: (css) => sliceBlock(css, ':root {'),
+    // Flute's legacy roles are aliases onto the design team's palette, which
+    // lives in a second file it @imports. Concatenate both, the app's own
+    // block last, so a role resolves through `var()` chains to a real colour.
+    block: (css) => {
+      const tokens = resolve(repo, '../Flute/design/css/tokens.css')
+      const base = existsSync(tokens) ? sliceBlock(readFileSync(tokens, 'utf8'), ':root{') ?? '' : ''
+      const app = sliceBlock(css, ':root {')
+      return app == null ? null : `${base}\n${app}`
+    },
     varFor: (role) => `--${role === 'danger-accent' ? 'danger' : role}`,
   },
 ]
@@ -120,9 +128,11 @@ for (const src of SOURCES) {
   for (const role of roles) {
     const name = src.varFor(role)
     let actual = declaredValue(block, name)
-    // Campaigns aliases --ok to --green; resolve one level of var() indirection.
-    const alias = actual?.match(/^var\((--[a-z0-9-]+)\)$/)
-    if (alias) actual = declaredValue(block, alias[1]) ?? actual
+    // Resolve every `var(--x)`, nested or not (Campaigns: --accent → --coral →
+    // `oklch(0.70 0.19 33)`, and --ink → `oklch(0.18 0.005 var(--h))` → hue 80).
+    for (let hops = 0; hops < 8 && actual?.includes('var('); hops++) {
+      actual = actual.replace(/var\((--[a-z0-9-]+)\)/g, (m, ref) => declaredValue(block, ref) ?? m)
+    }
     const expected = mirror[role]
     if (actual == null) drift.push([role, name, '(not declared)', expected])
     else if (norm(actual) !== norm(expected)) drift.push([role, name, actual, expected])
@@ -147,5 +157,5 @@ if (problems) {
   process.exit(1)
 }
 if (skipped === SOURCES.length) {
-  console.log('\nNo sibling repos found — nothing verified. Run this where CMS/ and Influencer/ are checked out.')
+  console.log('\nNo sibling repos found — nothing verified. Run this where CMS/ and Flute/ are checked out.')
 }

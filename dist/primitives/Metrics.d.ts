@@ -34,8 +34,9 @@ export declare function Stat({ label, value, hint, delta, size, className, }: {
     value: ReactNode;
     hint?: ReactNode;
     delta?: number;
-    /** sm 15px · md 17px · lg 22px. Match it to how much room the tile has. */
-    size?: 'sm' | 'md' | 'lg';
+    /** sm 15px · md 17px · lg 22px · xl 28px. Match it to how much room the tile has —
+     *  xl is the headline figure of a dashboard KPI tile. */
+    size?: 'sm' | 'md' | 'lg' | 'xl';
     className?: string;
 }): import("react").JSX.Element;
 /** Horizontal "bar list" — a labelled ranking with proportional fill bars. */
@@ -64,8 +65,9 @@ export declare function SectionCard({ title, action, variant, children, }: {
     variant?: "eyebrow" | "heading";
     children: ReactNode;
 }): import("react").JSX.Element;
-export declare function EmptyHint({ children }: {
+export declare function EmptyHint({ children, className }: {
     children: ReactNode;
+    className?: string;
 }): import("react").JSX.Element;
 /**
  * A single proportional fill. Both apps had written this by hand five times

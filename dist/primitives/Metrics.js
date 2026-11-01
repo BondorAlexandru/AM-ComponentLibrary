@@ -66,6 +66,7 @@ export function Stat({ label, value, hint, delta, size = 'md', className, }) {
         sm: 'text-[15px] tracking-[-0.01em]',
         md: 'text-[17px] tracking-[-0.02em]',
         lg: 'text-[22px] tracking-[-0.02em]',
+        xl: 'text-[28px] tracking-[-0.03em]',
     }[size];
     return (_jsxs("div", { className: cn('min-w-0', className), children: [_jsx("p", { className: "text-ink-3 truncate text-[11px]", children: label }), _jsx("p", { className: cn('text-ink mt-0.5 leading-none font-bold tabular-nums', valueSize), children: _jsx(Figure, { value: value }) }), (hint || delta !== undefined) && (_jsxs("div", { className: "mt-1 flex items-center gap-1.5", children: [delta !== undefined && _jsx(Delta, { value: delta }), hint && _jsx("span", { className: "text-ink-3 text-[10.5px]", children: hint })] }))] }));
 }
@@ -102,8 +103,11 @@ export function SectionCard({ title, action, variant = "eyebrow", children, }) {
                             ? "font-display text-sm font-semibold tracking-tight text-ink"
                             : "font-display text-[12px] tracking-[1.4px] uppercase text-ink-3", children: title }), action] }), children] }));
 }
-export function EmptyHint({ children }) {
-    return (_jsx("div", { className: "text-center py-12 px-4 border border-dashed border-hairline rounded-2xl bg-input", children: _jsx("p", { className: "text-sm text-ink-2 max-w-md mx-auto", children: children }) }));
+export function EmptyHint({ children, className }) {
+    return (
+    // `className` is merged last, so a cramped container (a dropdown, a drawer
+    // list) can take the padding down without forking the panel.
+    _jsx("div", { className: cn('text-center py-12 px-4 border border-dashed border-hairline rounded-2xl bg-input', className), children: _jsx("p", { className: "text-sm text-ink-2 max-w-md mx-auto", children: children }) }));
 }
 const BAR_HEIGHT = { sm: 'h-1.5', md: 'h-2', lg: 'h-3' };
 /**

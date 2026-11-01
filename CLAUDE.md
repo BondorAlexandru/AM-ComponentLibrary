@@ -1,7 +1,7 @@
 # CLAUDE.md — AM Component Library (`@am/ui`)
 
 Working rules for this repo. Same shape as the two consumer repos (`CMS`,
-`Influencer`) so the three read alike: **§A** what to load, **§B** how to talk,
+`Flute`, formerly `Influencer`) so the three read alike: **§A** what to load, **§B** how to talk,
 **§C** the absolute rules.
 
 This repo is different from those two in one way that changes everything about
@@ -75,7 +75,7 @@ read the CMS — `../CMS/components/ui/**` — rather than guessing.
 - **Don't invent values you don't have** — token names, prop names, export
   names, class strings. `grep`, don't guess. The three places that hold the
   truth: `src/tokens/contract.ts`, `../CMS/app/globals.css`,
-  `../Influencer/src/index.css`.
+  `../Flute/src/index.css`.
 - Prefer the **established sibling pattern** over clever new code. A design
   system's whole value is that its parts are predictable.
 - State the success criteria before non-trivial work and verify against them:
@@ -125,7 +125,7 @@ control in production and a perfectly green test run here._
 
 **C.4 — Adding a required token is a breaking change; ship it to both apps in the same task.**
 `src/tokens/contract.ts` is the contract. New **tier 1** token → both
-`../CMS/app/globals.css` and `../Influencer/src/index.css` must define it before
+`../CMS/app/globals.css` and `../Flute/src/index.css` must define it before
 the component ships, and `docs/TOKENS.md` must say what role it plays. Prefer
 **tier 2** (required only by the primitives that use it) for anything not
 genuinely universal. Never widen tier 1 to avoid writing a lookup table.
@@ -273,7 +273,7 @@ _Backed by: all three._
 
 Both are required. Neither fails loudly.
 
-1. **Install** — `"@am/ui": "github:BondorAlexandru/AM-ComponentLibrary#v0.3.2"`.
+1. **Install** — `"@am/ui": "github:BondorAlexandru/AM-ComponentLibrary#v0.4.0"`.
 2. **Point Tailwind at the package**, or every class string is purged and the
    components render unstyled:
    ```css
@@ -330,10 +330,11 @@ What it is for, beyond a component list:
   `--transition-fast/base/slow` at 150/200/300ms with zero consumers, which now
   duplicates `DURATION` at different values (120/180/240/360/600ms). Harmless
   while nothing reads them; a trap the first time someone does.
-- **AM Campaigns still keeps app-level prop adapters** (`Button`'s default
-  variant, `EmptyState`'s `body`/`compact` names). Deliberate: it shares the
-  implementation without churning ~70 call sites. Converging the prop names is a
-  separate, mechanical task.
+- **AM Campaigns (the `Flute` repo, formerly `Influencer`) still keeps app-level
+  prop adapters** (`Button`'s default variant, `EmptyState`'s `body`/`compact`
+  names). Deliberate: it shares the implementation without churning ~70 call
+  sites. Since v0.4.0 its `Select` and `Checkbox` are the library's — `Dropdown`
+  learned `id`/`name`/`required` and `Form.Checkbox` learned `indeterminate`.
 - **Two menu primitives on purpose.** `Menu` (items array, portalled, flips) and
   `Popover` (render-prop, in-flow) are different tools, not duplicates —
   see the header comment in `src/primitives/Popover.tsx`.

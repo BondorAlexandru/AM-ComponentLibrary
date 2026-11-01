@@ -10,6 +10,8 @@ import {
   MenuSeparator,
   Modal,
   Popover,
+  ToastContainer,
+  useToast,
 } from '@am/ui'
 import { Archive, Copy, Eye, MoreHorizontal, Pencil, Settings, Trash2, User } from '@am/ui/icons'
 import type { DocEntry } from '../types.ts'
@@ -120,22 +122,23 @@ export const modalEntry: DocEntry = {
   name: 'Modal & Drawer',
   group: 'Overlays',
   origin: 'campaigns',
-  covers: ['Modal', 'Drawer'],
+  covers: ['Modal', 'Drawer', 'useDialogA11y'],
   requires: ['--radius-card', '--shadow-overlay'],
   imports: "import { Modal, Drawer } from '@am/ui'",
   summary:
-    'Two portalled overlays sharing one behaviour hook: Escape closes, body scroll locks while open, focus lands inside, and the previous overflow value is restored the moment open flips back. Modal centres and pops from 0.96; Drawer slides off its own right edge. Both animate out as well as in, and neither needs a keyframe or a token to do it.',
+    'Two portalled overlays sharing one behaviour hook: Escape closes, body scroll locks while open, focus lands inside, and the previous overflow value is restored the moment open flips back. Modal centres and pops from 0.96; Drawer slides off its own right edge. Both animate out as well as in, and neither needs a keyframe or a token to do it. Tab stays inside the panel and focus returns to the opener on close; that behaviour is exported as useDialogA11y for a dialog an app still builds by hand.',
   props: [
     {
       title: 'Modal',
       rows: [
         { name: 'open', type: 'boolean', required: true, note: 'Controlled. Flipping it to false starts the exit; the panel unmounts once that finishes, so there are no hidden focus targets left behind — but there is a short window where it is still in the DOM.' },
         { name: 'onClose', type: '() => void', required: true, note: 'Called by Escape, the backdrop, and the header close button.' },
-        { name: 'title', type: 'string', required: true, note: 'Rendered as the h2. Modal always has a visible title.' },
-        { name: 'description', type: 'string', note: 'A line under the title, in ink-2.' },
+        { name: 'title', type: 'string', required: true, note: 'Rendered as the h2, and it names the dialog (aria-labelledby). Modal always has a visible title.' },
+        { name: 'description', type: 'string', note: 'A line under the title, in ink-2. Wired as the dialog’s aria-describedby.' },
         { name: 'children', type: 'ReactNode', note: 'The scrolling body. Capped at 88vh total height.' },
         { name: 'footer', type: 'ReactNode', note: 'Right-aligned action row above a hairline rule. Omit it and no footer renders.' },
         { name: 'width', type: 'string', default: "'max-w-[520px]'", note: 'A utility class, so you can pass any max-width.' },
+        { name: 'className', type: 'string', note: 'Appended to the panel, last. For surface and layout tweaks; the header and footer are not reachable from here.' },
       ],
     },
     {
@@ -146,6 +149,16 @@ export const modalEntry: DocEntry = {
         { name: 'children', type: 'ReactNode', required: true, note: 'The whole panel. Drawer adds no header or padding.' },
         { name: 'width', type: 'string', default: "'max-w-[min(1120px,94vw)]'", note: 'Wide by default — drawers here hold a record, not a form.' },
         { name: 'label', type: 'string', note: 'aria-label on the dialog. Set it: Drawer has no title to name it.' },
+        { name: 'className', type: 'string', note: 'Appended to the panel, last, e.g. bg-surface border-l border-hairline for the CMS surface-coloured side panels.' },
+      ],
+    },
+    {
+      title: 'useDialogA11y(ref, isOpen, onClose, options?)',
+      rows: [
+        { name: 'ref', type: 'RefObject<HTMLElement>', required: true, note: 'The dialog panel. Tab is trapped inside it; Escape anywhere calls onClose.' },
+        { name: 'isOpen', type: 'boolean', required: true, note: 'Keyed on this, not on mount, so focus returns the moment the state flips, before an exit animation ends.' },
+        { name: 'options.initialFocus', type: 'RefObject<HTMLElement>', note: 'Where focus lands on open. Default: the first focusable control, else the panel.' },
+        { name: 'options.closeOnEscape', type: 'boolean', default: 'true', note: 'Set false while saving, so Escape cannot abandon a half-applied action.' },
       ],
     },
   ],
@@ -276,7 +289,7 @@ export const confirmDialogEntry: DocEntry = {
     {
       rows: [
         { name: 'isOpen', type: 'boolean', required: true, note: 'Note the name — isOpen, not open, unlike Modal. Inherited from the CMS.' },
-        { name: 'onClose', type: '() => void', required: true, note: 'Cancel. There is no Escape handler and no backdrop click — deliberate friction on a destructive path.' },
+        { name: 'onClose', type: '() => void', required: true, note: 'Cancel, and Escape unless isLoading. There is still no backdrop click: deliberate friction on a destructive path.' },
         { name: 'onConfirm', type: '() => void', required: true, note: 'The destructive action.' },
         { name: 'title', type: 'string', required: true, note: 'Phrase it as the question.' },
         { name: 'message', type: 'string', required: true, note: 'What will actually happen, and whether it is reversible.' },
@@ -290,7 +303,7 @@ export const confirmDialogEntry: DocEntry = {
     'It animates in and out — the same fade scrim and popCentered panel as Modal. That is the only thing about it that has changed: the markup and every class string are still the CMS’s, which is what keeps it inside the frozen-class rule.',
     'It carries `use client` now. The directive was previously omitted on purpose — both apps only ever import it from a client component, and the CMS original had none — but AnimatePresence and motion are hook-bearing client components, so the file cannot be a server component any more. Nothing regresses at today’s call sites; a future server-component one is now ruled out rather than merely unlikely.',
     'The enter and exit are kept at or under ~260ms deliberately: the CMS Playwright suite has 23 hardcoded waitForTimeout calls with retries: 0, several of them on the confirm-delete path.',
-    'Unlike Modal, this does not close on Escape or a backdrop click, and does not lock body scroll. On a destructive dialog the extra friction is the feature — but it also means it is the one overlay that does not trap focus.',
+    'It is a real dialog: role="alertdialog" labelled by the title and described by the message, focus lands on Cancel (the safe choice), Tab is trapped inside, and focus returns on close. Escape cancels unless isLoading. This came from the CMS, which had wrapped the library version to add exactly this. It still ignores backdrop clicks and does not lock body scroll.',
     'AM Campaigns deliberately does not use this: it prefers an optimistic action with an undo toast, on the grounds that confirmations get clicked through without being read.',
   ],
   states: [
@@ -498,6 +511,105 @@ export const popoverEntry: DocEntry = {
             <MenuItem danger>Danger</MenuItem>
           </div>
         ) },
+      ],
+    },
+  ],
+}
+
+function ToastDemo({ type }: { type: 'success' | 'error' | 'info' | 'warning' }) {
+  const t = useToast()
+  const copy = {
+    success: 'Page published',
+    error: 'Couldn’t save. Try again',
+    info: 'Draft restored from a minute ago',
+    warning: 'Unsaved changes on this page',
+  }[type]
+  return (
+    <>
+      <Button variant="secondary" size="sm" onClick={() => t[type](copy)}>{type}</Button>
+      <ToastContainer toasts={t.toasts} onClose={t.remove} />
+    </>
+  )
+}
+
+function ToastStackDemo() {
+  const t = useToast()
+  return (
+    <>
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => {
+          t.success('Saved')
+          setTimeout(() => t.info('Cache cleared for 3 pages'), 250)
+          setTimeout(() => t.warning('One image is still uploading', 8000), 500)
+        }}
+      >
+        Fire three
+      </Button>
+      <ToastContainer toasts={t.toasts} onClose={t.remove} />
+    </>
+  )
+}
+
+export const toastEntry: DocEntry = {
+  id: 'toast',
+  name: 'Toast',
+  group: 'Overlays',
+  origin: 'cms',
+  frozen: true,
+  covers: ['Toast', 'ToastContainer', 'useToast'],
+  imports: "import { ToastContainer, useToast } from '@am/ui'",
+  summary:
+    'A transient notification stack in the top-right corner. useToast owns the queue, ToastContainer renders it as a polite live region, and each Toast slides in from the right and dismisses itself after five seconds. Use it to confirm something that already happened; use Form.Error when the user has to act.',
+  props: [
+    {
+      title: 'useToast()',
+      rows: [
+        { name: 'toasts', type: 'ToastItem[]', note: 'The live queue. Hand it to ToastContainer.' },
+        { name: 'success / error / info / warning', type: '(message, duration?) => id', note: 'Enqueue one. duration is milliseconds, default 5000.' },
+        { name: 'add', type: '(message, type?, duration?) => id', note: 'The general form of the four above.' },
+        { name: 'remove', type: '(id) => void', note: 'Dismiss early. ToastContainer calls it for the × and the timer.' },
+      ],
+    },
+    {
+      title: 'ToastContainer',
+      rows: [
+        { name: 'toasts', type: 'ToastItem[]', required: true, note: 'From useToast.' },
+        { name: 'onClose', type: '(id) => void', required: true, note: 'useToast’s remove.' },
+        { name: 'className', type: 'string', note: 'Appended to the fixed container: move the corner or change the z-index.' },
+      ],
+    },
+    {
+      title: 'Toast',
+      rows: [
+        { name: 'toast', type: 'ToastItem', required: true, note: '{ id, type, message, duration? }. Exported for a custom container; most apps never render it directly.' },
+        { name: 'onClose', type: '(id) => void', required: true, note: 'Called by the × and the auto-dismiss timer.' },
+      ],
+    },
+  ],
+  notes: [
+    'The container is pointer-events-none and each toast pointer-events-auto, so an empty stack never blocks the corner it sits over.',
+    'aria-live="polite" is on the container, so each arrival is announced without interrupting; role="status" on each toast keeps it discoverable.',
+    'Colour is on the icon only, so a run of mixed toasts reads as one stack, not a traffic light.',
+    'Enter and exit use slideFrom(\'right\'); the reflow when one leaves is the smooth spring on layout. Fire three and dismiss the middle one to watch the gap close.',
+    'useToast keeps the queue in component state, so each screen that mounts a ToastContainer has its own stack. Nothing is global.',
+  ],
+  states: [
+    {
+      title: 'Types',
+      note: 'Each button fires a real toast into the top-right corner. Wait five seconds or click the ×.',
+      cols: 4,
+      items: (['success', 'error', 'info', 'warning'] as const).map((type) => ({
+        label: `type="${type}"`,
+        node: <ToastDemo type={type} />,
+      })),
+    },
+    {
+      title: 'Stacking and reflow',
+      cols: 1,
+      items: [
+        { label: 'three at once', note: 'The third stays eight seconds. Dismiss the middle one and the last slides up.', wide: true, node: <ToastStackDemo /> },
       ],
     },
   ],

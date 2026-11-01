@@ -163,7 +163,7 @@ export const statEntry: DocEntry = {
         { name: 'value', type: 'ReactNode', required: true, note: 'Rendered tabular-nums, so a column of live figures does not shimmy as it updates.' },
         { name: 'hint', type: 'ReactNode', note: 'The small line under the value — a comparison, a unit, a date range.' },
         { name: 'delta', type: 'number', note: 'A percentage change. Renders a Delta before the hint.' },
-        { name: 'size', type: "'sm' | 'md' | 'lg'", default: "'md'", note: '15 / 17 / 22px. Match it to the room the tile has, not to importance.' },
+        { name: 'size', type: "'sm' | 'md' | 'lg' | 'xl'", default: "'md'", note: '15 / 17 / 22 / 28px. Match it to the room the tile has, not to importance. xl is the headline figure of a dashboard KPI tile.' },
       ],
     },
     {
@@ -191,6 +191,14 @@ export const statEntry: DocEntry = {
     'KpiCard uses `font-display`, so an app that has not mapped that token gets the body font. Nothing breaks; the eyebrow just looks less distinct.',
   ],
   states: [
+    {
+      title: 'Stat — sizes',
+      cols: 4,
+      items: (['sm', 'md', 'lg', 'xl'] as const).map((size) => ({
+        label: `size="${size}"`,
+        node: <Stat label="Pieces live" value="128" hint="this month" size={size} />,
+      })),
+    },
     {
       title: 'Counting up, live',
       note: 'The figures animate. Press the buttons more than once — the first arrival counts from zero, every later change ticks from wherever the number currently is, which is what makes a live dashboard readable rather than flickery.',
@@ -541,6 +549,7 @@ export const layoutEntry: DocEntry = {
       title: 'EmptyHint',
       rows: [
         { name: 'children', type: 'ReactNode', required: true, note: 'One sentence. If it needs an action and an icon, use EmptyState instead.' },
+        { name: 'className', type: 'string', note: 'Merged last. For a cramped container — a dropdown, a drawer list — where 48px of vertical padding is most of the space: `py-4`.' },
       ],
     },
   ],
@@ -568,6 +577,7 @@ export const layoutEntry: DocEntry = {
       cols: 1,
       items: [
         { label: 'on its own', wide: true, node: <div className="w-full"><EmptyHint>No traffic recorded in this range.</EmptyHint></div> },
+        { label: 'compact — className="py-4"', note: 'The padding a dropdown or drawer list can afford.', wide: true, node: <div className="w-full max-w-xs"><EmptyHint className="py-4">You’re all caught up.</EmptyHint></div> },
         { label: 'inside a SectionCard', note: 'The pairing it was written for.', wide: true, node: (
           <div className="w-full max-w-lg">
             <SectionCard title="Top referrers">

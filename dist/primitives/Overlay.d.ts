@@ -22,14 +22,16 @@
  * on the white surface.
  */
 import { type ReactNode } from 'react';
-export declare function Drawer({ open, onClose, children, width, label, }: {
+export declare function Drawer({ open, onClose, children, width, label, className, }: {
     open: boolean;
     onClose: () => void;
     children: ReactNode;
     width?: string;
     label?: string;
+    /** Appended to the panel, last — e.g. `bg-surface border-l border-hairline`. */
+    className?: string;
 }): import("react").ReactPortal | null;
-export declare function Modal({ open, onClose, title, description, children, footer, width, }: {
+export declare function Modal({ open, onClose, title, description, children, footer, width, className, }: {
     open: boolean;
     onClose: () => void;
     title: string;
@@ -37,5 +39,7 @@ export declare function Modal({ open, onClose, title, description, children, foo
     children?: ReactNode;
     footer?: ReactNode;
     width?: string;
+    /** Appended to the panel, last. */
+    className?: string;
 }): import("react").ReactPortal | null;
 //# sourceMappingURL=Overlay.d.ts.map

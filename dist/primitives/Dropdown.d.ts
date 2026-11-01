@@ -29,7 +29,18 @@ interface DropdownProps {
     className?: string;
     'aria-label'?: string;
     title?: string;
+    /** Goes on the trigger, so a `<label htmlFor>` names it like a native select. */
+    id?: string;
+    /**
+     * Form integration. With either set, a visually hidden native `<select>`
+     * carries the value, so the surrounding form submits it and `required` gets
+     * the browser's own validation — the two things a custom listbox otherwise
+     * silently loses.
+     */
+    name?: string;
+    required?: boolean;
+    form?: string;
 }
-export declare function Dropdown({ value, onChange, options, children, placeholder, disabled, className, 'aria-label': ariaLabel, title, }: DropdownProps): React.JSX.Element;
+export declare function Dropdown({ value, onChange, options, children, placeholder, disabled, className, 'aria-label': ariaLabel, title, id, name, required, form, }: DropdownProps): React.JSX.Element;
 export {};
 //# sourceMappingURL=Dropdown.d.ts.map

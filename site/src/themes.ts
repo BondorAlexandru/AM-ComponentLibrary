@@ -9,7 +9,7 @@ import { TIER1_COLOR_TOKENS, type Tier1ColorToken } from '@am/ui'
  *
  *   cms-dark    ../CMS/app/globals.css        `:root[data-theme="dark"]`
  *   cms-light   ../CMS/app/globals.css        `:root, :root[data-theme="light"]`
- *   campaigns   ../Influencer/src/index.css   `:root`
+ *   campaigns   ../Flute/src/index.css   `:root`
  *
  * `npm run check:themes` diffs them against those files when the sibling repos
  * are checked out, so drift fails loudly instead of quietly making the docs lie.
@@ -109,27 +109,27 @@ export const THEMES: Theme[] = [
     id: 'campaigns',
     label: 'Campaigns',
     app: 'AM Campaigns',
-    note: 'Light only. Slightly softer lines and ink than the CMS light theme — the two are close, not identical.',
+    note: 'Flute. Light only, warm neutrals on hue 80, coral as the action colour with ink text on it — never white on coral.',
     scheme: 'light',
     roles: {
-      canvas: '#f6f6f9',
+      canvas: 'oklch(0.985 0.003 80)',
       surface: '#ffffff',
-      'surface-2': '#efeff5',
-      ink: '#0b0d18',
-      'ink-2': 'rgba(11, 13, 24, 0.72)',
-      'ink-3': 'rgba(11, 13, 24, 0.56)',
-      accent: '#d9086b',
-      'accent-text': '#b8045a',
-      'accent-soft': 'rgba(217, 8, 107, 0.1)',
-      'on-accent': '#ffffff',
-      ok: '#0e8655',
+      'surface-2': 'oklch(0.96 0.004 80)',
+      ink: 'oklch(0.18 0.005 80)',
+      'ink-2': 'oklch(0.48 0.006 80)',
+      'ink-3': 'oklch(0.66 0.006 80)',
+      accent: 'oklch(0.70 0.19 33)',
+      'accent-text': 'oklch(0.47 0.17 33)',
+      'accent-soft': 'oklch(0.94 0.05 33)',
+      'on-accent': 'oklch(0.18 0.005 80)',
+      ok: 'oklch(0.40 0.09 150)',
       'on-ok': '#ffffff',
-      warn: '#9a6708',
-      'danger-accent': '#cf3527',
+      warn: 'oklch(0.45 0.10 85)',
+      'danger-accent': 'oklch(0.47 0.17 33)',
       'on-danger': '#ffffff',
-      line: 'rgba(11, 13, 24, 0.16)',
-      hairline: 'rgba(11, 13, 24, 0.09)',
-      input: 'rgba(11, 13, 24, 0.03)',
+      line: 'oklch(0.90 0.004 80)',
+      hairline: 'oklch(0.90 0.004 80)',
+      input: 'oklch(0.96 0.004 80)',
     },
     tier2: {
       '--radius-pill': { value: '999px', declared: true },
@@ -139,7 +139,7 @@ export const THEMES: Theme[] = [
         value: '0 2px 8px rgba(10, 10, 15, 0.07), 0 8px 24px rgba(10, 10, 15, 0.06)',
         declared: true,
       },
-      '--font-display': { value: "'DM Sans', ui-sans-serif, system-ui, sans-serif", declared: true },
+      '--font-display': { value: '"Archivo", ui-sans-serif, system-ui, sans-serif', declared: true },
     },
   },
 ]

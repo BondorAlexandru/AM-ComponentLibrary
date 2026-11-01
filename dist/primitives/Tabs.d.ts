@@ -28,12 +28,18 @@ export declare function Tabs<T extends string>({ items, value, onChange, 'aria-l
     className?: string;
     size?: 'sm' | 'md';
 }): import("react").JSX.Element;
-export declare function SegmentedControl<T extends string>({ items, value, onChange, 'aria-label': ariaLabel, className, size, }: {
+export declare function SegmentedControl<T extends string>({ items, value, onChange, 'aria-label': ariaLabel, className, size, variant, }: {
     items: TabItem<T>[];
     value: T;
     onChange: (id: T) => void;
     'aria-label'?: string;
     className?: string;
     size?: 'sm' | 'md';
+    /**
+     * `pill` is the AM Campaigns treatment (ink pill on an open row). `boxed` is
+     * the CMS's: a bordered `bg-input` tray with an `accent-soft` tile for the
+     * active segment — the range picker, the heat-map filters, the theme toggle.
+     */
+    variant?: 'pill' | 'boxed';
 }): import("react").JSX.Element;
 //# sourceMappingURL=Tabs.d.ts.map

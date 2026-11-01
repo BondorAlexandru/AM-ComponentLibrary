@@ -32,6 +32,51 @@ function LiveCheckbox({ label }: { label: string }) {
   return <Form.Checkbox label={label} checked={on} onChange={(e) => setOn(e.target.checked)} />
 }
 
+/** "Some of them" until clicked, then a plain checked box — the select-all gesture. */
+function IndeterminateCheckbox() {
+  const [state, setState] = useState<'some' | 'all' | 'none'>('some')
+  return (
+    <Form.Checkbox
+      label={state === 'some' ? '2 of 5 selected' : state === 'all' ? 'All 5 selected' : 'None selected'}
+      checked={state === 'all'}
+      indeterminate={state === 'some'}
+      onChange={(e) => setState(e.target.checked ? 'all' : 'none')}
+    />
+  )
+}
+
+/** The form-integration specimen: a label that names the trigger and a required value the browser enforces. */
+function RequiredSelectForm() {
+  const [value, setValue] = useState('')
+  const [submitted, setSubmitted] = useState<string | null>(null)
+  return (
+    <form
+      className="flex w-full max-w-md flex-col gap-2"
+      onSubmit={(e) => {
+        e.preventDefault()
+        setSubmitted(new FormData(e.currentTarget).get('client') as string)
+      }}
+    >
+      <Form.Label htmlFor="docs-required-client" required>Client</Form.Label>
+      <Form.Select id="docs-required-client" name="client" required value={value} onChange={(e) => setValue(e.target.value)}>
+        <option value="">Choose a client…</option>
+        <option value="aurelia">Aurelia Skincare</option>
+        <option value="northbank">Northbank Coffee</option>
+      </Form.Select>
+      <div className="flex items-center gap-3">
+        {/* No type, so it submits the form — the point of the specimen. */}
+        <Ctl onClick={() => {}}>Submit</Ctl>
+        <span className="text-[12px] text-zinc-400">{submitted ? `submitted client=${submitted}` : 'nothing submitted yet'}</span>
+      </div>
+    </form>
+  )
+}
+
+function LiveSwitch({ label, initial = false, disabled }: { label?: string; initial?: boolean; disabled?: boolean }) {
+  const [on, setOn] = useState(initial)
+  return <Form.Switch checked={on} onChange={setOn} label={label} aria-label={label ? undefined : 'Enable'} disabled={disabled} />
+}
+
 /** Docs-chrome control — zinc, like the rest of the site chrome, so it stays
  *  legible on all three canvases and never depends on a token. */
 function Ctl({ onClick, children, active }: { onClick: () => void; children: React.ReactNode; active?: boolean }) {
@@ -130,13 +175,25 @@ export const formEntry: DocEntry = {
         { name: 'children', type: '<option> elements', note: 'Parsed like a native select. It renders the custom Dropdown underneath.' },
         { name: 'size', type: "'sm' | 'md' | 'lg'", default: "'md'", note: 'Matches TextInput heights.' },
         { name: 'onChange', type: '(e: { target: { value } }) => void', note: 'Shaped like a native change event so existing e.target.value handlers keep working.' },
+        { name: 'id', type: 'string', note: 'Put on the trigger button, so a Form.Label htmlFor names the control and getByLabel finds it.' },
+        { name: 'name / required / form', type: 'string / boolean / string', note: 'Form integration: either of name or required renders a hidden native select that submits the value and validates. Pair required with an empty-value placeholder option.' },
       ],
     },
     {
       title: 'Form.Checkbox / Form.Radio',
       rows: [
-        { name: 'label', type: 'string', note: 'A string, not a ReactNode. It generates its own id via useId and wires htmlFor.' },
+        { name: 'label', type: 'ReactNode', note: 'The caption — a string, or a node carrying a hint or a link. Wired with htmlFor to a generated id, or to yours if you pass one.' },
+        { name: 'indeterminate', type: 'boolean', default: 'false', note: 'Checkbox only. The "some of them" state for a select-all header. Set as a DOM property, announced as aria-checked="mixed".' },
         { name: 'error', type: 'boolean', default: 'false', note: 'Danger border and focus ring.' },
+      ],
+    },
+    {
+      title: 'Form.Switch',
+      rows: [
+        { name: 'checked', type: 'boolean', required: true, note: 'Controlled. A switch takes effect the moment it flips, so there is no uncontrolled mode.' },
+        { name: 'onChange', type: '(checked: boolean) => void', required: true, note: 'Receives the next value, not an event.' },
+        { name: 'label', type: 'string', note: 'Visible text to the right, wired with htmlFor. Without it, pass aria-label: a bare toggle has no accessible name.' },
+        { name: 'disabled', type: 'boolean', default: 'false', note: '50% opacity, pointer blocked. Use it while the change is saving.' },
       ],
     },
   ],
@@ -144,8 +201,9 @@ export const formEntry: DocEntry = {
     'Form.Error and Form.Hint animate on the collapse variant — height: auto plus a fade, so a message arriving does not jump the field below it. A *changed* message re-animates too: the element is keyed on its text, so swapping the string plays an exit and an enter rather than silently substituting the words.',
     'The exit only plays if the caller keeps the component mounted and empties its children. `{error && <Form.Error>{error}</Form.Error>}` removes the element before anything can animate it away; `<Form.Error>{error}</Form.Error>` with an empty string is the shape that leaves. Both specimens are below, side by side.',
     'Form.Error animates on mount, Form.Hint does not. An error is something that *arrives*, so it earns an entrance wherever it turns up; a hint is usually printed with the field, and eight hints unfolding on page load is a form that looks like it is still loading.',
-    'Form.Select forwards only value, onChange, disabled, aria-label and title to the Dropdown — id, name and required are dropped. That means no native validation and no <Label htmlFor> association. If you need either, use a native select for now.',
-    'Form.Checkbox takes a string label and no indeterminate state. AM Campaigns keeps a local checkbox for its select-all header for exactly that reason.',
+    'Form.Select forwards id, name, required and form to the Dropdown. id lands on the trigger, so <Form.Label htmlFor> names it; name or required adds a visually hidden native <select> that carries the value, so the surrounding form submits it and `required` gets the browser’s own validation bubble. Without either, no hidden select is rendered.',
+    'Form.Checkbox takes a ReactNode label and an `indeterminate` flag. The flag is a DOM property, not an attribute, so the component sets it in an effect and reports aria-checked="mixed" while it is on. A caller-supplied id is honoured and the label follows it.',
+    'Form.Switch is a <button role="switch">, not a checkbox input: it submits nothing and flips on click. Use Checkbox inside a form you submit, Switch for a setting that applies immediately (the CMS chatbot enable toggle).',
     'Form.Label uses font-display. If an app has not mapped --font-display the utility is simply never emitted and labels fall back to the body font — no error, just a quiet difference.',
   ],
   states: [
@@ -195,6 +253,22 @@ export const formEntry: DocEntry = {
         { label: 'size="sm"', node: <div className="w-full"><LiveSelect size="sm" /></div> },
         { label: 'size="md"', node: <div className="w-full"><LiveSelect /></div> },
         { label: 'error', node: <div className="w-full"><LiveSelect error /></div> },
+        {
+          label: 'labelled + required, in a form',
+          wide: true,
+          note: 'Click the label — focus lands on the trigger. Submit with nothing chosen — the browser’s own validation bubble, not a custom one.',
+          node: <RequiredSelectForm />,
+        },
+      ],
+    },
+    {
+      title: 'Switch',
+      note: 'The knob slides on the 200ms ease-out the CMS shipped. The track is accent when on, input with a line border when off.',
+      cols: 3,
+      items: [
+        { label: 'off → on', node: <LiveSwitch label="Chatbot enabled" /> },
+        { label: 'on, no visible label', note: 'aria-label names it.', node: <LiveSwitch initial /> },
+        { label: 'disabled', node: <LiveSwitch label="Saving…" initial disabled /> },
       ],
     },
     {
@@ -204,6 +278,19 @@ export const formEntry: DocEntry = {
         { label: 'checkbox', node: <LiveCheckbox label="Notify the client" /> },
         { label: 'checkbox checked + disabled', node: <Form.Checkbox label="Locked on" checked disabled /> },
         { label: 'checkbox error', node: <Form.Checkbox label="You must agree" error /> },
+        { label: 'indeterminate', note: 'The select-all header state. Click it and it resolves to checked.', node: <IndeterminateCheckbox /> },
+        {
+          label: 'ReactNode label',
+          node: (
+            <Form.Checkbox
+              label={
+                <span>
+                  I agree to the <a href="#form" className="text-accent-text underline">terms</a>
+                </span>
+              }
+            />
+          ),
+        },
         { label: 'radio group', wide: true, node: (
           <div className="flex flex-col gap-1.5">
             <Form.Radio name="docs-visibility" label="Internal only" defaultChecked />
@@ -275,6 +362,8 @@ export const dropdownEntry: DocEntry = {
         { name: 'placeholder', type: 'string', default: "'Select…'", note: 'Shown in ink-3 when nothing matches value.' },
         { name: 'className', type: 'string', note: 'Replaces the default field look entirely when set — it is not appended.' },
         { name: 'disabled', type: 'boolean', default: 'false', note: '60% opacity, not-allowed cursor.' },
+        { name: 'id', type: 'string', note: 'Goes on the trigger, so <label htmlFor> names it as it would a native select.' },
+        { name: 'name / required / form', type: 'string / boolean / string', note: 'Either of name or required adds a visually hidden native <select> carrying the value: the form submits it and required gets native validation. Nothing is rendered otherwise.' },
       ],
     },
   ],
@@ -282,7 +371,7 @@ export const dropdownEntry: DocEntry = {
     'The listbox opens and closes on the pop variant — the same gesture as Menu and Popover, at a different size. transformOrigin sits at the top-left, so it grows out of the field rather than out of nothing.',
     'The listbox is portalled to document.body with position: fixed, so it is never clipped by a scrollable ancestor, and it flips above the trigger when there is not room below. Scroll the page with one open to see it track.',
     'Keyboard: ArrowDown/ArrowUp/Enter/Space open and move; Escape closes and returns focus to the trigger. The selected option carries aria-selected.',
-    'It does not forward id, name or required — so no native form validation and no <Label htmlFor> association.',
+    'With name or required set, the hidden native select sits at its static position right after the trigger (absolute, no offsets), so the browser’s validation bubble appears beside the control the user can see. When validation focuses the hidden select, the trigger takes the focus instead.',
   ],
   states: [
     {

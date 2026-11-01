@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AmUiProvider, Badge, SegmentedControl, Stepper, Tabs } from '@am/ui'
-import { BarChart3, FileText, Image, Settings } from '@am/ui/icons'
+import { BarChart3, FileText, Image, Moon, Settings, Sun } from '@am/ui/icons'
 import type { DocEntry } from '../types.ts'
 
 type TabId = 'overview' | 'traffic' | 'content' | 'locked'
@@ -30,6 +30,23 @@ function LiveSegmented(props: Partial<Parameters<typeof SegmentedControl<TabId>>
   )
 }
 
+function IconOnlySegmented() {
+  const [value, setValue] = useState<'dark' | 'light'>('dark')
+  return (
+    <SegmentedControl
+      variant="boxed"
+      size="sm"
+      aria-label="Theme"
+      value={value}
+      onChange={setValue}
+      items={[
+        { id: 'dark', icon: <Moon className="h-[13px] w-[13px]" />, label: <span className="sr-only">Dark theme</span> },
+        { id: 'light', icon: <Sun className="h-[13px] w-[13px]" />, label: <span className="sr-only">Light theme</span> },
+      ]}
+    />
+  )
+}
+
 export const tabsEntry: DocEntry = {
   id: 'tabs',
   name: 'Tabs & SegmentedControl',
@@ -48,7 +65,13 @@ export const tabsEntry: DocEntry = {
         { name: 'value', type: 'string', required: true, note: 'Controlled. Neither component holds its own state — a tab that forgets which one is open on re-render is worse than no tabs.' },
         { name: 'onChange', type: '(id) => void', required: true, note: 'Receives the item’s id. Typed to the union of your ids, so a typo is a compile error.' },
         { name: 'aria-label', type: 'string', note: 'Names the tablist. Set it when a page has more than one.' },
-        { name: 'size', type: "'sm' | 'md'", default: "'md'", note: 'Tabs: 13px/14px with tighter padding. SegmentedControl: 12px/12.5px.' },
+        { name: 'size', type: "'sm' | 'md'", default: "'md'", note: 'Tabs: 13px/14px with tighter padding. SegmentedControl: 12px/12.5px (pill), or 12px/13px in a 32px tray (boxed).' },
+      ],
+    },
+    {
+      title: 'SegmentedControl only',
+      rows: [
+        { name: 'variant', type: "'pill' | 'boxed'", default: "'pill'", note: 'pill is the AM Campaigns treatment: an ink pill travelling along an open row. boxed is the CMS one: a bordered bg-input tray with an accent-soft tile for the active segment, as in the insights range picker, the heat-map filters and the theme toggle.' },
       ],
     },
   ],
@@ -59,6 +82,8 @@ export const tabsEntry: DocEntry = {
     'The CMS had this underline row written out by hand in four places — app/page.tsx, ProjectDashboardClient, ChatbotAdminClient and ComponentWorkbench — with small drifts. The version with role="tablist"/aria-selected and a focus ring won.',
     'Tabs widens its hit area with a ::before pseudo-element rather than padding, because padding would push the text away from the underline it is supposed to sit on.',
     'Neither implements arrow-key roving focus. They are tablists by role but tab-stops by behaviour, matching what both apps already ship. Worth revisiting before either grows past about six tabs.',
+    'variant="boxed" needs no --radius-pill: its radii are literal (8px tray, 6px tile), so the CMS adopts it without a new token. The sliding tile is the same layoutId span, recoloured accent-soft.',
+    'For icon-only segments such as the theme toggle, pass the glyph as icon and an sr-only label so each tab keeps a name.',
     'SegmentedControl’s active pill is `bg-ink text-canvas` — ink-on-canvas inverts with the theme, so it is near-black on light and near-white on dark. Check it in both.',
   ],
   states: [
@@ -94,6 +119,17 @@ export const tabsEntry: DocEntry = {
             </AmUiProvider>
           ),
         },
+      ],
+    },
+    {
+      title: 'SegmentedControl — variant="boxed"',
+      note: 'The CMS tray. Same props and sliding marker; only the chrome differs.',
+      cols: 3,
+      items: [
+        { label: 'boxed, md', node: <LiveSegmented variant="boxed" /> },
+        { label: 'boxed, sm', note: '32px tray, the bar-control height.', node: <LiveSegmented variant="boxed" size="sm" /> },
+        { label: 'boxed, icon-only', note: 'Labels are sr-only.', node: <IconOnlySegmented /> },
+        { label: 'pill, for comparison', node: <LiveSegmented /> },
       ],
     },
     {

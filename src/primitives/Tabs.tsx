@@ -103,6 +103,7 @@ export function SegmentedControl<T extends string>({
   'aria-label': ariaLabel,
   className,
   size = 'md',
+  variant = 'pill',
 }: {
   items: TabItem<T>[]
   value: T
@@ -110,14 +111,29 @@ export function SegmentedControl<T extends string>({
   'aria-label'?: string
   className?: string
   size?: 'sm' | 'md'
+  /**
+   * `pill` is the AM Campaigns treatment (ink pill on an open row). `boxed` is
+   * the CMS's: a bordered `bg-input` tray with an `accent-soft` tile for the
+   * active segment — the range picker, the heat-map filters, the theme toggle.
+   */
+  variant?: 'pill' | 'boxed'
 }) {
   const layoutId = `am-segmented-${useId()}`
   const animate = useMotionEnabled()
+  const boxed = variant === 'boxed'
   return (
     <nav
       role="tablist"
       aria-label={ariaLabel}
-      className={cn('flex min-w-0 flex-wrap items-center gap-1', className)}
+      className={cn(
+        boxed
+          ? cn(
+              'inline-flex min-w-0 items-center rounded-[8px] border border-hairline bg-input',
+              size === 'sm' ? 'h-8 gap-0.5 px-0.5' : 'gap-[2px] p-[4px]',
+            )
+          : 'flex min-w-0 flex-wrap items-center gap-1',
+        className,
+      )}
     >
       {items.map((t) => (
         <button
@@ -128,11 +144,21 @@ export function SegmentedControl<T extends string>({
           disabled={t.disabled}
           onClick={() => onChange(t.id)}
           className={cn(
-            'rounded-pill relative isolate inline-flex items-center gap-1.5 font-medium whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-40',
-            size === 'sm' ? 'px-2.5 py-1 text-[12px]' : 'px-3 py-1.5 text-[12.5px]',
-            value === t.id
-              ? cn('text-canvas', !animate && 'bg-ink')
-              : 'text-ink-2 hover:bg-input hover:text-ink',
+            'relative isolate inline-flex items-center gap-1.5 font-medium whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-40',
+            boxed
+              ? cn(
+                  size === 'sm' ? 'h-7 rounded-md px-2.5 text-xs' : 'rounded-[6px] px-[12px] py-[6px] text-[13px]',
+                  value === t.id
+                    ? cn('text-accent-text', !animate && 'bg-accent-soft')
+                    : 'font-normal text-ink-2 hover:text-ink',
+                )
+              : cn(
+                  'rounded-pill',
+                  size === 'sm' ? 'px-2.5 py-1 text-[12px]' : 'px-3 py-1.5 text-[12.5px]',
+                  value === t.id
+                    ? cn('text-canvas', !animate && 'bg-ink')
+                    : 'text-ink-2 hover:bg-input hover:text-ink',
+                ),
           )}
         >
           {t.icon}
@@ -146,7 +172,10 @@ export function SegmentedControl<T extends string>({
               // negative z-index paints the pill above the button's own
               // background but still behind the label — no wrapper element,
               // and therefore no change to what the caller's children sit in.
-              className="bg-ink rounded-pill absolute inset-0 -z-10"
+              className={cn(
+                'absolute inset-0 -z-10',
+                boxed ? cn('bg-accent-soft', size === 'sm' ? 'rounded-md' : 'rounded-[6px]') : 'bg-ink rounded-pill',
+              )}
               transition={SPRING.snappy}
             />
           )}

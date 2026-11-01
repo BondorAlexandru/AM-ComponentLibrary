@@ -142,7 +142,7 @@ A new **tier 1** token is a breaking change for both apps (§C.4):
 1. Add the role to `TIER1_COLOR_TOKENS` in `src/tokens/contract.ts`.
 2. Add the row to the table above, with values for **all three** columns.
 3. Define it in `../CMS/app/globals.css` (both `[data-theme]` blocks) **and**
-   `../Influencer/src/index.css`.
+   `../Flute/src/index.css`.
 4. Only then use it in a component.
 
 Prefer tier 2 for anything not genuinely universal. Never widen tier 1 just to

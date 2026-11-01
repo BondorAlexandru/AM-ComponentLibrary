@@ -9,13 +9,15 @@ import { describe, expect, it, vi } from 'vitest'
 import { Button } from '../primitives/Button.js'
 import { Menu } from '../primitives/Menu.js'
 import { Dropdown } from '../primitives/Dropdown.js'
+import { Form } from '../primitives/Form.js'
 import { Modal } from '../primitives/Overlay.js'
 import { Popover, MenuItem } from '../primitives/Popover.js'
 import { isVideoUrl } from '../primitives/MediaThumb.js'
 import { AmUiProvider } from '../provider.js'
 import { cn } from '../lib/cn.js'
 import { formatBytes, formatNumber } from '../lib/format.js'
-import { ProgressBar, SegmentedBar } from '../primitives/Metrics.js'
+import { EmptyHint, ProgressBar, SegmentedBar } from '../primitives/Metrics.js'
+import { Tag } from '../primitives/Badge.js'
 import { SegmentedControl, Tabs } from '../primitives/Tabs.js'
 import { Stepper } from '../primitives/Stepper.js'
 
@@ -124,6 +126,93 @@ describe('Dropdown', () => {
     screen.getByLabelText('Pick', { selector: 'button' }).focus()
     await user.keyboard('{ArrowDown}')
     expect(await screen.findByRole('option', { name: 'Beta' })).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('takes a label through id, and joins the form through name and required', () => {
+    const { container } = render(
+      <form>
+        <label htmlFor="client">Client</label>
+        <Dropdown id="client" name="clientId" required value="b" onChange={vi.fn()}>
+          <option value="a">Alpha</option>
+          <option value="b">Beta</option>
+        </Dropdown>
+      </form>,
+    )
+    // The label names the trigger, like it would a native select.
+    expect(screen.getByLabelText('Client', { selector: 'button' })).toHaveAttribute('aria-required', 'true')
+    // The form sees a native control carrying the value.
+    const hidden = container.querySelector('select[name="clientId"]') as HTMLSelectElement
+    expect(hidden).not.toBeNull()
+    expect(hidden.value).toBe('b')
+    expect(hidden.required).toBe(true)
+    expect(hidden.tabIndex).toBe(-1)
+    expect(new FormData(container.querySelector('form')!).get('clientId')).toBe('b')
+  })
+
+  it('renders no hidden select when nothing asks for one', () => {
+    const { container } = render(
+      <Dropdown value="a" onChange={vi.fn()} aria-label="Pick">
+        <option value="a">Alpha</option>
+      </Dropdown>,
+    )
+    expect(container.querySelector('select')).toBeNull()
+  })
+
+  it('reports required-but-empty as invalid to the form', () => {
+    const { container } = render(
+      <form>
+        <Dropdown name="stage" required value={undefined} onChange={vi.fn()} aria-label="Stage">
+          <option value="a">Alpha</option>
+        </Dropdown>
+      </form>,
+    )
+    expect(container.querySelector('form')!.checkValidity()).toBe(false)
+  })
+})
+
+describe('Tag and EmptyHint', () => {
+  it('names the remove button after the tag when asked, and defaults otherwise', () => {
+    render(
+      <>
+        <Tag onRemove={vi.fn()} removeLabel="Remove fitness">fitness</Tag>
+        <Tag onRemove={vi.fn()}>beauty</Tag>
+      </>,
+    )
+    expect(screen.getByRole('button', { name: 'Remove fitness' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove tag' })).toBeInTheDocument()
+  })
+
+  it('lets a caller take EmptyHint padding down, merged last', () => {
+    const { container } = render(<EmptyHint className="py-4">Nothing</EmptyHint>)
+    const box = container.firstElementChild as HTMLElement
+    expect(box.className).toContain('py-4')
+    expect(box.className).not.toContain('py-12')
+  })
+})
+
+describe('Form.Checkbox', () => {
+  it('sets the indeterminate DOM property and announces it as mixed', () => {
+    const { rerender } = render(<Form.Checkbox label="All" checked={false} onChange={vi.fn()} indeterminate />)
+    const box = screen.getByLabelText('All') as HTMLInputElement
+    expect(box.indeterminate).toBe(true)
+    expect(box).toHaveAttribute('aria-checked', 'mixed')
+    rerender(<Form.Checkbox label="All" checked onChange={vi.fn()} />)
+    expect(box.indeterminate).toBe(false)
+    expect(box).not.toHaveAttribute('aria-checked')
+  })
+
+  it('keeps the label attached when the caller supplies the id', () => {
+    render(
+      <Form.Checkbox
+        id="agree"
+        label={
+          <span>
+            I agree to the <a href="#terms">terms</a>
+          </span>
+        }
+      />,
+    )
+    expect(screen.getByLabelText(/I agree to the/)).toHaveAttribute('id', 'agree')
   })
 })
 

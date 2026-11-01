@@ -14,7 +14,7 @@ component, every state, in all three app themes.
 ## Install
 
 ```bash
-npm i "github:BondorAlexandru/AM-ComponentLibrary#v0.3.2"
+npm i "github:BondorAlexandru/AM-ComponentLibrary#v0.4.0"
 ```
 
 `dist/` is committed, so there is **no install-time build** — nothing to fail on

@@ -28,6 +28,7 @@ export const badgeEntry: DocEntry = {
       rows: [
         { name: 'variant', type: 'BadgeVariant', default: "'neutral'", note: 'Same palette as Badge.' },
         { name: 'onRemove', type: '() => void', note: 'Renders the × affordance. Omit it and Tag is a fixed-size Badge.' },
+        { name: 'removeLabel', type: 'string', default: "'Remove tag'", note: 'The × button’s accessible name. Name the tag — a row of identical "Remove tag" buttons is useless to a screen reader.' },
       ],
     },
     {
@@ -67,6 +68,7 @@ export const badgeEntry: DocEntry = {
       items: [
         { label: 'without onRemove', node: <><Tag>design-system</Tag><Tag variant="primary">brand</Tag></> },
         { label: 'with onRemove', note: 'The × is a real button with aria-label="Remove tag".', node: <><Tag onRemove={() => {}}>beauty</Tag><Tag variant="primary" onRemove={() => {}}>skincare</Tag></> },
+        { label: 'with removeLabel', note: 'aria-label="Remove fitness" — inspect the ×.', node: <Tag onRemove={() => {}} removeLabel="Remove fitness">fitness</Tag> },
         { label: 'a full tag row', wide: true, node: <>{['fashion', 'beauty', 'lifestyle', 'fitness', 'travel'].map((t) => <Tag key={t} onRemove={() => {}}>{t}</Tag>)}</> },
       ],
     },

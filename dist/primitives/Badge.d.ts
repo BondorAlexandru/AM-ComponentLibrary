@@ -16,9 +16,11 @@ interface TagProps {
     children: ReactNode;
     variant?: BadgeVariant;
     onRemove?: () => void;
+    /** Accessible name of the remove button — "Remove fitness" beats a list of identical "Remove tag"s. */
+    removeLabel?: string;
     className?: string;
 }
-export declare function Tag({ children, variant, onRemove, className }: TagProps): import("react").JSX.Element;
+export declare function Tag({ children, variant, onRemove, removeLabel, className }: TagProps): import("react").JSX.Element;
 interface StatusProps {
     children: ReactNode;
     variant?: 'success' | 'danger' | 'warning' | 'neutral' | 'active';

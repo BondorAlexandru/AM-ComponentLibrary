@@ -9,7 +9,7 @@
  */
 'use client';
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { forwardRef, useId } from 'react';
+import React, { forwardRef, useId } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Dropdown } from './Dropdown.js';
 import { cn } from '../lib/cn.js';
@@ -66,7 +66,7 @@ const Select = ({ error, size = 'md', children, className = '', value, onChange,
         lg: 'h-[var(--am-h-field-lg,48px)] pl-4 pr-[12px] text-lg',
     };
     const errorClasses = error ? 'border-danger-accent' : 'border-line hover:border-accent/60 focus-visible:border-accent';
-    return (_jsx(Dropdown, { value: value === undefined || value === null ? undefined : String(value), onChange: (e) => onChange?.({ target: { value: e.target.value } }), disabled: disabled, "aria-label": props['aria-label'], title: props.title, className: cn(`
+    return (_jsx(Dropdown, { value: value === undefined || value === null ? undefined : String(value), onChange: (e) => onChange?.({ target: { value: e.target.value } }), disabled: disabled, "aria-label": props['aria-label'], title: props.title, id: props.id, name: props.name, required: props.required, form: props.form, className: cn(`
         w-full rounded-[var(--am-radius-control,8px)]
         ${sizeClasses[size]}
         ${errorClasses}
@@ -75,20 +75,47 @@ const Select = ({ error, size = 'md', children, className = '', value, onChange,
         focus-visible:outline-none`, className), children: children }));
 };
 Select.displayName = 'Select';
-const Checkbox = forwardRef(({ label, error, className = '', ...props }, ref) => {
-    const id = useId();
+const Checkbox = forwardRef(({ label, error, indeterminate, className = '', ...props }, ref) => {
+    const autoId = useId();
+    // A caller's id wins, and the label follows it — otherwise `htmlFor`
+    // would point at the generated id the input no longer carries.
+    const id = props.id ?? autoId;
+    const inner = React.useRef(null);
+    const setRef = React.useCallback((el) => {
+        inner.current = el;
+        if (typeof ref === 'function')
+            ref(el);
+        else if (ref)
+            ref.current = el;
+    }, [ref]);
+    React.useEffect(() => {
+        if (inner.current)
+            inner.current.indeterminate = !!indeterminate;
+    }, [indeterminate]);
     const errorClasses = error
         ? 'border-danger-accent text-danger-accent focus:ring-danger-accent'
         : 'border-line text-accent focus:ring-accent';
-    return (_jsxs("div", { className: "flex items-center gap-2", children: [_jsx("input", { ref: ref, type: "checkbox", id: id, className: cn(`
+    return (_jsxs("div", { className: "flex items-center gap-2", children: [_jsx("input", { ref: setRef, type: "checkbox", "aria-checked": indeterminate ? 'mixed' : undefined, className: cn(`
             h-4 w-4 rounded
             ${errorClasses}
             border-2
             transition-colors
             focus:outline-none focus:ring-2 focus:ring-offset-0
-            disabled:cursor-not-allowed disabled:opacity-50`, className), ...props }), label && (_jsx("label", { htmlFor: id, className: "text-sm text-ink-2 cursor-pointer", children: label }))] }));
+            disabled:cursor-not-allowed disabled:opacity-50`, className), ...props, id: id }), label && (_jsx("label", { htmlFor: id, className: "text-sm text-ink-2 cursor-pointer", children: label }))] }));
 });
 Checkbox.displayName = 'Checkbox';
+/**
+ * On/off toggle (CMS-canonical — the chatbot enable switch). A button with
+ * role="switch", not a checkbox: it flips immediately and never sits in a form.
+ */
+const Switch = forwardRef(({ checked, onChange, label, className = '', disabled, 'aria-label': ariaLabel, ...props }, ref) => {
+    const id = useId();
+    const control = (_jsx("button", { ref: ref, id: id, type: "button", role: "switch", "aria-checked": checked, "aria-label": ariaLabel, disabled: disabled, onClick: () => onChange(!checked), className: cn('relative h-6 w-[44px] shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:opacity-50 disabled:cursor-not-allowed', checked ? 'bg-accent' : 'bg-input border border-line', className), ...props, children: _jsx("span", { className: cn('absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-on-accent shadow-sm transition-[left] duration-200 ease-out', checked ? 'left-[22px]' : 'left-0.5') }) }));
+    if (!label)
+        return control;
+    return (_jsxs("div", { className: "flex items-center gap-2.5", children: [control, _jsx("label", { htmlFor: id, className: "text-sm text-ink-2 cursor-pointer", children: label })] }));
+});
+Switch.displayName = 'Switch';
 const Radio = forwardRef(({ label, error, className = '', ...props }, ref) => {
     const id = useId();
     const errorClasses = error
@@ -146,6 +173,7 @@ export const Form = {
     Select,
     Checkbox,
     Radio,
+    Switch,
     Hint,
     Error: FieldError,
     InputGroup,

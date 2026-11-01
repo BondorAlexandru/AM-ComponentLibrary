@@ -111,14 +111,16 @@ export function Stat({
   value: ReactNode
   hint?: ReactNode
   delta?: number
-  /** sm 15px · md 17px · lg 22px. Match it to how much room the tile has. */
-  size?: 'sm' | 'md' | 'lg'
+  /** sm 15px · md 17px · lg 22px · xl 28px. Match it to how much room the tile has —
+   *  xl is the headline figure of a dashboard KPI tile. */
+  size?: 'sm' | 'md' | 'lg' | 'xl'
   className?: string
 }) {
   const valueSize = {
     sm: 'text-[15px] tracking-[-0.01em]',
     md: 'text-[17px] tracking-[-0.02em]',
     lg: 'text-[22px] tracking-[-0.02em]',
+    xl: 'text-[28px] tracking-[-0.03em]',
   }[size]
   return (
     <div className={cn('min-w-0', className)}>
@@ -290,9 +292,11 @@ export function SectionCard({
   )
 }
 
-export function EmptyHint({ children }: { children: ReactNode }) {
+export function EmptyHint({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className="text-center py-12 px-4 border border-dashed border-hairline rounded-2xl bg-input">
+    // `className` is merged last, so a cramped container (a dropdown, a drawer
+    // list) can take the padding down without forking the panel.
+    <div className={cn('text-center py-12 px-4 border border-dashed border-hairline rounded-2xl bg-input', className)}>
       <p className="text-sm text-ink-2 max-w-md mx-auto">{children}</p>
     </div>
   )

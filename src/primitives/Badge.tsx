@@ -59,10 +59,12 @@ interface TagProps {
   children: ReactNode
   variant?: BadgeVariant
   onRemove?: () => void
+  /** Accessible name of the remove button — "Remove fitness" beats a list of identical "Remove tag"s. */
+  removeLabel?: string
   className?: string
 }
 
-export function Tag({ children, variant = 'neutral', onRemove, className = '' }: TagProps) {
+export function Tag({ children, variant = 'neutral', onRemove, removeLabel = 'Remove tag', className = '' }: TagProps) {
   const animate = useMotionEnabled()
   return (
     <span
@@ -77,7 +79,7 @@ export function Tag({ children, variant = 'neutral', onRemove, className = '' }:
           type="button"
           onClick={onRemove}
           className="-mr-1 ml-0.5 rounded-full p-0.5 opacity-70 transition-opacity hover:opacity-100"
-          aria-label="Remove tag"
+          aria-label={removeLabel}
           {...(animate ? { whileHover: { scale: 1.15 }, whileTap: { scale: 0.85 }, transition: SPRING.snappy } : null)}
         >
           <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

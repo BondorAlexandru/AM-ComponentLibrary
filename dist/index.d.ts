@@ -10,6 +10,7 @@
  */
 export { cn, type ClassValue } from './lib/cn.js';
 export { formatNumber, formatBytes } from './lib/format.js';
+export { useDialogA11y } from './lib/useDialogA11y.js';
 export { AmUiProvider, DefaultSpinner, Spinner, useAmUi, useComponentTheme, type AmUiContextValue, type AmUiTheme, type ComponentConfig, type ComponentName, type MotionPreferences, type SpinnerProps, } from './theme.js';
 export { Slot } from './lib/Slot.js';
 export { EASE, EASE_IN_OUT, DURATION, SPRING, STAGGER, VIEWPORT, tween, fade, rise, pop, popCentered, slideFrom, staggerList, riseItem, collapse, AmUiMotionConfig, Reveal, Collapse, Stagger, StaggerItem, AnimatedNumber, useMotionEnabled, useVariants, instantVariants, type DurationName, type SpringName, type RevealProps, type CollapseProps, type StaggerProps, type AnimatedNumberProps, } from './motion/index.js';
@@ -24,6 +25,7 @@ export { Form } from './primitives/Form.js';
 export { Menu, type MenuItem as MenuItemDescriptor } from './primitives/Menu.js';
 export { MediaThumb, isVideoUrl, type MediaThumbProps } from './primitives/MediaThumb.js';
 export { Skeleton } from './primitives/Skeleton.js';
+export { Toast, ToastContainer, useToast, type ToastItem, type ToastType } from './primitives/Toast.js';
 export { Delta, KpiCard, BarList, ScoreGauge, SectionCard, EmptyHint, type CountRow, } from './primitives/Metrics.js';
 export { Pill } from './primitives/Pill.js';
 export { Modal, Drawer } from './primitives/Overlay.js';

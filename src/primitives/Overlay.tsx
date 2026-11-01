@@ -24,10 +24,11 @@
 
 'use client'
 
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { cn } from '../lib/cn.js'
+import { useDialogA11y } from '../lib/useDialogA11y.js'
 import { fade, popCentered, slideFrom } from '../motion/variants.js'
 import { useVariants } from '../motion/components.js'
 import { IconButton } from './Button.js'
@@ -37,7 +38,8 @@ import { X } from '../icons/index.js'
 const slideFromRight = slideFrom('right')
 
 /**
- * Escape closes, background scroll locks, focus lands inside. Shared by both.
+ * Escape closes, background scroll locks, focus lands inside, Tab stays inside,
+ * and focus goes back where it came from on close. Shared by both.
  *
  * Keyed on `open`, not on mount, and that distinction now matters: the exit
  * animation keeps the panel in the DOM for a couple of hundred milliseconds
@@ -46,24 +48,18 @@ const slideFromRight = slideFrom('right')
  */
 function useOverlayBehaviour(open: boolean, onClose: () => void) {
   const ref = useRef<HTMLDivElement>(null)
+  // Initial focus is the panel itself (tabIndex -1), as before — the first
+  // control inside a drawer is rarely the right place to land.
+  useDialogA11y(ref, open, onClose, { initialFocus: ref })
 
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation()
-        onClose()
-      }
-    }
-    document.addEventListener('keydown', onKey)
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    ref.current?.focus()
     return () => {
-      document.removeEventListener('keydown', onKey)
       document.body.style.overflow = prev
     }
-  }, [open, onClose])
+  }, [open])
 
   return ref
 }
@@ -74,12 +70,15 @@ export function Drawer({
   children,
   width = 'max-w-[min(1120px,94vw)]',
   label,
+  className,
 }: {
   open: boolean
   onClose: () => void
   children: ReactNode
   width?: string
   label?: string
+  /** Appended to the panel, last — e.g. `bg-surface border-l border-hairline`. */
+  className?: string
 }) {
   const ref = useOverlayBehaviour(open, onClose)
   const scrim = useVariants(fade)
@@ -113,6 +112,7 @@ export function Drawer({
             className={cn(
               'bg-canvas text-ink relative flex h-full w-full flex-col shadow-overlay outline-none',
               width,
+              className,
             )}
             variants={panel}
             initial="hidden"
@@ -136,6 +136,7 @@ export function Modal({
   children,
   footer,
   width = 'max-w-[520px]',
+  className,
 }: {
   open: boolean
   onClose: () => void
@@ -144,10 +145,15 @@ export function Modal({
   children?: ReactNode
   footer?: ReactNode
   width?: string
+  /** Appended to the panel, last. */
+  className?: string
 }) {
   const ref = useOverlayBehaviour(open, onClose)
   const scrim = useVariants(fade)
   const panel = useVariants(popCentered)
+  // The title names the dialog, and the description describes it.
+  const titleId = useId()
+  const descriptionId = useId()
   if (typeof document === 'undefined') return null
 
   return createPortal(
@@ -158,6 +164,8 @@ export function Modal({
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
+          aria-labelledby={titleId}
+          aria-describedby={description ? descriptionId : undefined}
         >
           <motion.div
             className="absolute inset-0 bg-[rgba(10,10,15,0.4)]"
@@ -173,6 +181,7 @@ export function Modal({
             className={cn(
               'bg-surface text-ink rounded-card relative flex max-h-[88vh] w-full flex-col shadow-overlay outline-none',
               width,
+              className,
             )}
             variants={panel}
             initial="hidden"
@@ -181,8 +190,8 @@ export function Modal({
           >
             <header className="flex items-start justify-between gap-4 px-6 pt-5 pb-4">
               <div>
-                <h2 className="text-[17px] font-semibold tracking-[-0.01em]">{title}</h2>
-                {description && <p className="text-ink-2 mt-1 text-[13px] leading-relaxed">{description}</p>}
+                <h2 id={titleId} className="text-[17px] font-semibold tracking-[-0.01em]">{title}</h2>
+                {description && <p id={descriptionId} className="text-ink-2 mt-1 text-[13px] leading-relaxed">{description}</p>}
               </div>
               <IconButton variant="ghost" size="sm" onClick={onClose} aria-label="Close" icon={<X size={16} />} />
             </header>

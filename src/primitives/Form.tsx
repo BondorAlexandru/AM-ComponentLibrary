@@ -169,6 +169,10 @@ const Select = ({ error, size = 'md', children, className = '', value, onChange,
       disabled={disabled}
       aria-label={props['aria-label']}
       title={props.title}
+      id={props.id}
+      name={props.name}
+      required={props.required}
+      form={props.form}
       className={cn(`
         w-full rounded-[var(--am-radius-control,8px)]
         ${sizeClasses[size]}
@@ -188,13 +192,35 @@ Select.displayName = 'Select'
 // ==========================================
 
 interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
-  label?: string
+  /** The caption. A node, so it can carry a hint or an inline link. */
+  label?: ReactNode
   error?: boolean
+  /**
+   * "Some of them". A DOM property, not an attribute, so it is set in an
+   * effect; the box shows a dash and reports `aria-checked="mixed"`. Clicking
+   * it reports `checked` as the browser decides, as a native checkbox does.
+   */
+  indeterminate?: boolean
 }
 
 const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ label, error, className = '', ...props }, ref) => {
-    const id = useId()
+  ({ label, error, indeterminate, className = '', ...props }, ref) => {
+    const autoId = useId()
+    // A caller's id wins, and the label follows it — otherwise `htmlFor`
+    // would point at the generated id the input no longer carries.
+    const id = props.id ?? autoId
+    const inner = React.useRef<HTMLInputElement | null>(null)
+    const setRef = React.useCallback(
+      (el: HTMLInputElement | null) => {
+        inner.current = el
+        if (typeof ref === 'function') ref(el)
+        else if (ref) ref.current = el
+      },
+      [ref],
+    )
+    React.useEffect(() => {
+      if (inner.current) inner.current.indeterminate = !!indeterminate
+    }, [indeterminate])
 
     const errorClasses = error
       ? 'border-danger-accent text-danger-accent focus:ring-danger-accent'
@@ -203,9 +229,9 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
     return (
       <div className="flex items-center gap-2">
         <input
-          ref={ref}
+          ref={setRef}
           type="checkbox"
-          id={id}
+          aria-checked={indeterminate ? 'mixed' : undefined}
           className={cn(`
             h-4 w-4 rounded
             ${errorClasses}
@@ -214,6 +240,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             focus:outline-none focus:ring-2 focus:ring-offset-0
             disabled:cursor-not-allowed disabled:opacity-50`, className)}
           {...props}
+          id={id}
         />
         {label && (
           <label htmlFor={id} className="text-sm text-ink-2 cursor-pointer">
@@ -225,6 +252,64 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   }
 )
 Checkbox.displayName = 'Checkbox'
+
+// ==========================================
+// Switch
+// ==========================================
+
+interface SwitchProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onChange' | 'type'> {
+  checked: boolean
+  onChange: (checked: boolean) => void
+  /** Required unless `aria-label` is supplied some other way — a bare toggle has no name. */
+  'aria-label'?: string
+  /** Visible text label to the right; also names the control when aria-label is absent. */
+  label?: string
+}
+
+/**
+ * On/off toggle (CMS-canonical — the chatbot enable switch). A button with
+ * role="switch", not a checkbox: it flips immediately and never sits in a form.
+ */
+const Switch = forwardRef<HTMLButtonElement, SwitchProps>(
+  ({ checked, onChange, label, className = '', disabled, 'aria-label': ariaLabel, ...props }, ref) => {
+    const id = useId()
+    const control = (
+      <button
+        ref={ref}
+        id={id}
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={ariaLabel}
+        disabled={disabled}
+        onClick={() => onChange(!checked)}
+        className={cn(
+          'relative h-6 w-[44px] shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:opacity-50 disabled:cursor-not-allowed',
+          checked ? 'bg-accent' : 'bg-input border border-line',
+          className,
+        )}
+        {...props}
+      >
+        <span
+          className={cn(
+            'absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-on-accent shadow-sm transition-[left] duration-200 ease-out',
+            checked ? 'left-[22px]' : 'left-0.5',
+          )}
+        />
+      </button>
+    )
+    if (!label) return control
+    return (
+      <div className="flex items-center gap-2.5">
+        {control}
+        <label htmlFor={id} className="text-sm text-ink-2 cursor-pointer">
+          {label}
+        </label>
+      </div>
+    )
+  }
+)
+Switch.displayName = 'Switch'
 
 // ==========================================
 // Radio
@@ -392,6 +477,7 @@ export const Form = {
   Select,
   Checkbox,
   Radio,
+  Switch,
   Hint,
   Error: FieldError,
   InputGroup,

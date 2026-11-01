@@ -11,6 +11,8 @@
 
 export { cn, type ClassValue } from './lib/cn.js'
 export { formatNumber, formatBytes } from './lib/format.js'
+// Focus trap + Escape + focus restore for any custom dialog an app still owns.
+export { useDialogA11y } from './lib/useDialogA11y.js'
 
 export {
   AmUiProvider,
@@ -90,6 +92,7 @@ export { Form } from './primitives/Form.js'
 export { Menu, type MenuItem as MenuItemDescriptor } from './primitives/Menu.js'
 export { MediaThumb, isVideoUrl, type MediaThumbProps } from './primitives/MediaThumb.js'
 export { Skeleton } from './primitives/Skeleton.js'
+export { Toast, ToastContainer, useToast, type ToastItem, type ToastType } from './primitives/Toast.js'
 export {
   Delta,
   KpiCard,

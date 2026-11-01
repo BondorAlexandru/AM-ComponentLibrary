@@ -90,6 +90,7 @@ export function Toast({
         <p className="text-sm font-medium text-ink">{toast.message}</p>
       </div>
       <IconButton
+        type="button"
         variant="bare"
         size="auto"
         aria-label="Dismiss notification"

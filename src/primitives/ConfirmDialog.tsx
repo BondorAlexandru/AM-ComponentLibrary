@@ -80,10 +80,10 @@ export function ConfirmDialog({
             <h2 id={titleId} className="text-lg font-semibold tracking-tight text-ink mb-2">{title}</h2>
             <p id={messageId} className="text-sm text-ink-2 mb-6 leading-relaxed">{message}</p>
             <div className="flex justify-end gap-2">
-              <Button ref={cancelRef} variant="tertiary" onClick={onClose} disabled={isLoading}>
+              <Button ref={cancelRef} type="button" variant="tertiary" onClick={onClose} disabled={isLoading}>
                 Cancel
               </Button>
-              <Button variant={confirmVariant} onClick={onConfirm} loading={isLoading}>
+              <Button type="button" variant={confirmVariant} onClick={onConfirm} loading={isLoading}>
                 {confirmText}
               </Button>
             </div>

@@ -115,3 +115,34 @@ describe('Button — link', () => {
     expect(b.className).toContain('text-[length:var(--am-text-control-sm,12.5px)]')
   })
 })
+
+describe('library buttons never submit a surrounding form', () => {
+  it('ConfirmDialog Cancel/Confirm and the Modal close button are type="button"', async () => {
+    const user = userEvent.setup()
+    const { ConfirmDialog } = await import('../primitives/ConfirmDialog.js')
+    const { Modal } = await import('../primitives/Overlay.js')
+    const onSubmit = vi.fn((e: React.FormEvent) => e.preventDefault())
+    const onClose = vi.fn()
+    render(
+      <AmUiProvider theme={noMotion}>
+        <form onSubmit={onSubmit}>
+          <ConfirmDialog isOpen onClose={onClose} onConfirm={() => {}} title="Erase?" message="Gone." confirmText="Erase" />
+        </form>
+      </AmUiProvider>,
+    )
+    await user.click(screen.getByText('Cancel'))
+    await user.click(screen.getByText('Erase'))
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(onClose).toHaveBeenCalled()
+    render(
+      <AmUiProvider theme={noMotion}>
+        <form onSubmit={onSubmit}>
+          <Modal open onClose={onClose} title="In a form" />
+        </form>
+      </AmUiProvider>,
+    )
+    // Modal portals to body, so this also proves the close button is inert as a submitter.
+    expect(screen.getByRole('button', { name: 'Close' })).toHaveAttribute('type', 'button')
+    expect(screen.getByRole('button', { name: 'Cancel' })).toHaveAttribute('type', 'button')
+  })
+})

@@ -101,6 +101,7 @@ export function MenuItem({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className={cn(
         'flex w-full items-center gap-2.5 rounded-[var(--am-radius-control,8px)] px-2.5 py-[7px] text-left text-[13px] transition-colors',

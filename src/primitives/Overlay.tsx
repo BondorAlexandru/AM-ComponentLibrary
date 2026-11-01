@@ -193,7 +193,7 @@ export function Modal({
                 <h2 id={titleId} className="text-[17px] font-semibold tracking-[-0.01em]">{title}</h2>
                 {description && <p id={descriptionId} className="text-ink-2 mt-1 text-[13px] leading-relaxed">{description}</p>}
               </div>
-              <IconButton variant="ghost" size="sm" onClick={onClose} aria-label="Close" icon={<X size={16} />} />
+              <IconButton type="button" variant="ghost" size="sm" onClick={onClose} aria-label="Close" icon={<X size={16} />} />
             </header>
             {children && <div className="overflow-y-auto px-6 pb-2">{children}</div>}
             {footer && (
